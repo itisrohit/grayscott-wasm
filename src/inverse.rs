@@ -194,4 +194,29 @@ mod tests {
         assert!((result.best_kill - params.kill).abs() <= f32::EPSILON);
         assert_eq!(result.best_loss, 0.0);
     }
+
+    #[test]
+    fn grid_search_recovers_close_candidate_for_off_grid_target() {
+        let params = GrayScottParams::new(0.06055, 0.06245, 0.16, 0.08, 1.0);
+        let target = InverseTarget::new(32, 32, 100, 5, params);
+        let (target_u, target_v) = generate_target(target);
+        let config = GridSearchConfig {
+            feed_min: 0.058,
+            feed_max: 0.063,
+            feed_count: 11,
+            kill_min: 0.060,
+            kill_max: 0.065,
+            kill_count: 11,
+            diff_u: 0.16,
+            diff_v: 0.08,
+            dt: 1.0,
+        };
+
+        let result = grid_search(target, config, &target_u, &target_v);
+
+        assert_eq!(result.evaluated, 121);
+        assert!((result.best_feed - params.feed).abs() <= 0.000051);
+        assert!((result.best_kill - params.kill).abs() <= 0.000051);
+        assert!(result.best_loss > 0.0);
+    }
 }

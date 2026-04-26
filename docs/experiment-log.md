@@ -351,17 +351,33 @@ cargo run --release --bin inverse_grid -- \
 
 Observed output:
 
-| Grid | Steps | Target F | Target k | Best F | Best k | Loss | Evaluated |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| 64x64 | 100 | 0.060000 | 0.062000 | 0.060000 | 0.062000 | 0.000e0 | 25 |
+| Grid | Steps | Target F | Target k | Best F | Best k | F abs err | k abs err | Loss | Evaluated |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 64x64 | 100 | 0.060000 | 0.062000 | 0.060000 | 0.062000 | 0.000000 | 0.000000 | 0.000e0 | 25 |
+
+Harder off-grid command:
+
+```bash
+cargo run --release --bin inverse_grid -- \
+  --width 64 --height 64 --steps 100 \
+  --target-feed 0.06055 --target-kill 0.06245 \
+  --feed-min 0.058 --feed-max 0.063 --feed-count 11 \
+  --kill-min 0.060 --kill-max 0.065 --kill-count 11
+```
+
+Observed output:
+
+| Grid | Steps | Target F | Target k | Best F | Best k | F abs err | k abs err | Loss | Evaluated |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 64x64 | 100 | 0.060550 | 0.062450 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 2.997e-7 | 121 |
 
 Interpretation:
 
 - The first inverse baseline correctly recovers the known target when the true
   `F` and `k` values are present in the search grid.
 - This is a sanity baseline, not yet a strong inverse-problem result.
-- Next inverse checks should use off-grid target parameters, more rollout steps,
-  multiple target regimes, and noisy targets.
+- Next inverse checks should use more rollout steps, multiple target regimes,
+  noisy targets, and non-grid-aligned optimizers.
 
 ---
 

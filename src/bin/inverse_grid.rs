@@ -83,6 +83,8 @@ fn main() {
 
     let (target_u, target_v) = generate_target(target);
     let result = grid_search(target, config, &target_u, &target_v);
+    let feed_abs_error = (result.best_feed - args.target_feed).abs();
+    let kill_abs_error = (result.best_kill - args.target_kill).abs();
 
     if let Some(expected) = args.expect_feed {
         assert_within("feed", result.best_feed, expected, args.tolerance);
@@ -93,7 +95,7 @@ fn main() {
 
     if args.json {
         println!(
-            "{{\"width\":{},\"height\":{},\"steps\":{},\"radius\":{},\"target_feed\":{:.9},\"target_kill\":{:.9},\"best_feed\":{:.9},\"best_kill\":{:.9},\"best_loss\":{:.9e},\"evaluated\":{}}}",
+            "{{\"width\":{},\"height\":{},\"steps\":{},\"radius\":{},\"target_feed\":{:.9},\"target_kill\":{:.9},\"best_feed\":{:.9},\"best_kill\":{:.9},\"feed_abs_error\":{:.9},\"kill_abs_error\":{:.9},\"best_loss\":{:.9e},\"evaluated\":{}}}",
             args.width,
             args.height,
             args.steps,
@@ -102,16 +104,18 @@ fn main() {
             args.target_kill,
             result.best_feed,
             result.best_kill,
+            feed_abs_error,
+            kill_abs_error,
             result.best_loss,
             result.evaluated
         );
         return;
     }
 
-    println!("| Grid | Steps | Target F | Target k | Best F | Best k | Loss | Evaluated |");
-    println!("|---|---:|---:|---:|---:|---:|---:|---:|");
+    println!("| Grid | Steps | Target F | Target k | Best F | Best k | F abs err | k abs err | Loss | Evaluated |");
+    println!("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|");
     println!(
-        "| {}x{} | {} | {:.6} | {:.6} | {:.6} | {:.6} | {:.3e} | {} |",
+        "| {}x{} | {} | {:.6} | {:.6} | {:.6} | {:.6} | {:.6} | {:.6} | {:.3e} | {} |",
         args.width,
         args.height,
         args.steps,
@@ -119,6 +123,8 @@ fn main() {
         args.target_kill,
         result.best_feed,
         result.best_kill,
+        feed_abs_error,
+        kill_abs_error,
         result.best_loss,
         result.evaluated
     );

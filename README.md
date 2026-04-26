@@ -46,8 +46,9 @@ Run the inverse-recovery grid-search baseline:
 ```bash
 cargo run --release --bin inverse_grid -- \
   --width 64 --height 64 --steps 100 \
-  --feed-min 0.058 --feed-max 0.062 --feed-count 5 \
-  --kill-min 0.060 --kill-max 0.064 --kill-count 5
+  --target-feed 0.06055 --target-kill 0.06245 \
+  --feed-min 0.058 --feed-max 0.063 --feed-count 11 \
+  --kill-min 0.060 --kill-max 0.065 --kill-count 11
 ```
 
 Run the JavaScript scalar forward benchmark:

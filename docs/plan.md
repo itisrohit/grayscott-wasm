@@ -182,8 +182,9 @@ Current inverse baseline command:
 ```bash
 cargo run --release --bin inverse_grid -- \
   --width 64 --height 64 --steps 100 \
-  --feed-min 0.058 --feed-max 0.062 --feed-count 5 \
-  --kill-min 0.060 --kill-max 0.064 --kill-count 5
+  --target-feed 0.06055 --target-kill 0.06245 \
+  --feed-min 0.058 --feed-max 0.063 --feed-count 11 \
+  --kill-min 0.060 --kill-max 0.065 --kill-count 11
 ```
 
 This is a baseline, not the final differentiable method. It gives the paper a
@@ -194,8 +195,11 @@ Current inverse result:
 
 - A `64 x 64`, 100-step target with `F = 0.060` and `k = 0.062` is recovered
   exactly when the target pair is present in a 5-by-5 candidate grid.
-- This validates the inverse-recovery harness, but it is still only a sanity
-  baseline.
+- An off-grid `64 x 64`, 100-step target with `F = 0.06055` and `k = 0.06245`
+  is recovered to the nearest 11-by-11 grid candidate, with absolute parameter
+  errors of `0.00005` for both `F` and `k`.
+- These validate the inverse-recovery harness, but the next step is still a
+  non-grid-aligned recovery method such as finite-difference gradient descent.
 
 ---
 
