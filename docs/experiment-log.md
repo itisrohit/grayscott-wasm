@@ -218,7 +218,7 @@ Not yet done:
 - SIMD build.
 - Automatic differentiation.
 - Gradient checks.
-- Inverse recovery.
+- Inverse recovery beyond exact-grid sanity baselines.
 
 ---
 
@@ -316,6 +316,52 @@ Interpretation:
 - These are single-browser, single-machine manual results. Browser-rendering
   claims should remain qualified until repeated on at least one more browser or
   machine.
+
+---
+
+## Inverse Recovery Grid-Search Baseline
+
+Implementation:
+
+- Reusable Rust inverse utilities:
+  - `src/inverse.rs`
+- CLI:
+  - `src/bin/inverse_grid.rs`
+- Method:
+  - Generate a target pattern with known `F` and `k`.
+  - Evaluate candidate `(F, k)` pairs on the same grid and initial condition.
+  - Compare final `u` and `v` fields with mean squared error.
+  - Report the candidate with lowest loss.
+
+Test coverage:
+
+- `field_mse` is zero for identical fields.
+- `linspace` includes endpoints.
+- Grid search recovers the exact target parameters when the target `(F, k)` pair
+  is included in the candidate grid.
+
+Command:
+
+```bash
+cargo run --release --bin inverse_grid -- \
+  --width 64 --height 64 --steps 100 \
+  --feed-min 0.058 --feed-max 0.062 --feed-count 5 \
+  --kill-min 0.060 --kill-max 0.064 --kill-count 5
+```
+
+Observed output:
+
+| Grid | Steps | Target F | Target k | Best F | Best k | Loss | Evaluated |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 64x64 | 100 | 0.060000 | 0.062000 | 0.060000 | 0.062000 | 0.000e0 | 25 |
+
+Interpretation:
+
+- The first inverse baseline correctly recovers the known target when the true
+  `F` and `k` values are present in the search grid.
+- This is a sanity baseline, not yet a strong inverse-problem result.
+- Next inverse checks should use off-grid target parameters, more rollout steps,
+  multiple target regimes, and noisy targets.
 
 ---
 

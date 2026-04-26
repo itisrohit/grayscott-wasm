@@ -126,6 +126,7 @@ forward solver. The following pieces exist and are measured:
 - Rust-vs-NumPy full-field validation.
 - WASM-vs-NumPy full-field validation.
 - Browser WASM package build for real browser measurements.
+- Initial inverse-recovery grid-search baseline for `F` and `k`.
 - Multi-grid and multi-regime correctness logs.
 - Local and CI quality gates:
   - `cargo fmt --check`
@@ -175,6 +176,26 @@ at `512 x 512` (`0.817000 ms/frame` median), while direct `putImageData` is belo
 `0.1 ms/frame` in that environment. This is useful but still a single-browser,
 single-machine result, so the paper should qualify any browser-rendering claim
 until another browser or machine is measured.
+
+Current inverse baseline command:
+
+```bash
+cargo run --release --bin inverse_grid -- \
+  --width 64 --height 64 --steps 100 \
+  --feed-min 0.058 --feed-max 0.062 --feed-count 5 \
+  --kill-min 0.060 --kill-max 0.064 --kill-count 5
+```
+
+This is a baseline, not the final differentiable method. It gives the paper a
+clear recovery target that finite-difference gradients and forward-mode AD must
+match or improve.
+
+Current inverse result:
+
+- A `64 x 64`, 100-step target with `F = 0.060` and `k = 0.062` is recovered
+  exactly when the target pair is present in a 5-by-5 candidate grid.
+- This validates the inverse-recovery harness, but it is still only a sanity
+  baseline.
 
 ---
 

@@ -41,6 +41,15 @@ Run the native scalar forward benchmark:
 cargo run --release --bin bench_forward -- --grids 128,256,512 --steps 500 --trials 5
 ```
 
+Run the inverse-recovery grid-search baseline:
+
+```bash
+cargo run --release --bin inverse_grid -- \
+  --width 64 --height 64 --steps 100 \
+  --feed-min 0.058 --feed-max 0.062 --feed-count 5 \
+  --kill-min 0.060 --kill-max 0.064 --kill-count 5
+```
+
 Run the JavaScript scalar forward benchmark:
 
 ```bash
