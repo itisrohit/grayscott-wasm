@@ -51,6 +51,16 @@ cargo run --release --bin inverse_grid -- \
   --kill-min 0.060 --kill-max 0.065 --kill-count 11
 ```
 
+Run the inverse finite-difference gradient baseline:
+
+```bash
+cargo run --release --bin inverse_grad -- \
+  --width 64 --height 64 --steps 100 \
+  --target-feed 0.06055 --target-kill 0.06245 \
+  --guess-feed 0.060 --guess-kill 0.063 \
+  --epsilon 0.0001
+```
+
 Run the JavaScript scalar forward benchmark:
 
 ```bash

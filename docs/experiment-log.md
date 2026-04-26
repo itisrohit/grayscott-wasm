@@ -336,9 +336,12 @@ Implementation:
 Test coverage:
 
 - `field_mse` is zero for identical fields.
+- Direct loss evaluation is zero at the target parameters.
+- Finite-difference gradients are finite and nonzero for an off-target guess.
 - `linspace` includes endpoints.
 - Grid search recovers the exact target parameters when the target `(F, k)` pair
   is included in the candidate grid.
+- Grid search recovers a close candidate for an off-grid target.
 
 Command:
 
@@ -371,13 +374,31 @@ Observed output:
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | 64x64 | 100 | 0.060550 | 0.062450 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 2.997e-7 | 121 |
 
+Finite-difference gradient command:
+
+```bash
+cargo run --release --bin inverse_grad -- \
+  --width 64 --height 64 --steps 100 \
+  --target-feed 0.06055 --target-kill 0.06245 \
+  --guess-feed 0.060 --guess-kill 0.063 \
+  --epsilon 0.0001
+```
+
+Observed output:
+
+| Grid | Steps | Target F | Target k | Guess F | Guess k | Epsilon | Loss | dLoss/dF | dLoss/dk | Evaluated |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 64x64 | 100 | 0.060550 | 0.062450 | 0.060000 | 0.063000 | 1.0e-4 | 3.761e-5 | 6.972e-2 | 2.088e-1 | 5 |
+
 Interpretation:
 
 - The first inverse baseline correctly recovers the known target when the true
   `F` and `k` values are present in the search grid.
+- Central finite differences provide the first numerical gradient baseline for
+  later AD validation.
 - This is a sanity baseline, not yet a strong inverse-problem result.
 - Next inverse checks should use more rollout steps, multiple target regimes,
-  noisy targets, and non-grid-aligned optimizers.
+  noisy targets, gradient descent, and forward-mode AD.
 
 ---
 

@@ -30,6 +30,19 @@ pub struct GridSearchResult {
     pub evaluated: usize,
 }
 
+#[derive(Debug, Clone, Copy)]
+pub struct FiniteDifferenceGradient {
+    pub feed: f64,
+    pub kill: f64,
+    pub base_loss: f64,
+    pub feed_plus_loss: f64,
+    pub feed_minus_loss: f64,
+    pub kill_plus_loss: f64,
+    pub kill_minus_loss: f64,
+    pub epsilon: f32,
+    pub evaluated: usize,
+}
+
 impl InverseTarget {
     pub const fn new(
         width: usize,
@@ -100,6 +113,90 @@ pub fn field_mse(actual_u: &[f32], actual_v: &[f32], target_u: &[f32], target_v:
     sum / (2 * actual_u.len()) as f64
 }
 
+pub fn loss_for_params(
+    target: InverseTarget,
+    params: GrayScottParams,
+    target_u: &[f32],
+    target_v: &[f32],
+) -> f64 {
+    let mut sim = seeded_sim(target.width, target.height, target.radius);
+    sim.run(target.steps, params);
+    field_mse(sim.u(), sim.v(), target_u, target_v)
+}
+
+pub fn finite_difference_gradient(
+    target: InverseTarget,
+    base_params: GrayScottParams,
+    target_u: &[f32],
+    target_v: &[f32],
+    epsilon: f32,
+) -> FiniteDifferenceGradient {
+    assert!(epsilon > 0.0, "epsilon must be positive");
+
+    let base_loss = loss_for_params(target, base_params, target_u, target_v);
+    let feed_plus_loss = loss_for_params(
+        target,
+        GrayScottParams::new(
+            base_params.feed + epsilon,
+            base_params.kill,
+            base_params.diff_u,
+            base_params.diff_v,
+            base_params.dt,
+        ),
+        target_u,
+        target_v,
+    );
+    let feed_minus_loss = loss_for_params(
+        target,
+        GrayScottParams::new(
+            base_params.feed - epsilon,
+            base_params.kill,
+            base_params.diff_u,
+            base_params.diff_v,
+            base_params.dt,
+        ),
+        target_u,
+        target_v,
+    );
+    let kill_plus_loss = loss_for_params(
+        target,
+        GrayScottParams::new(
+            base_params.feed,
+            base_params.kill + epsilon,
+            base_params.diff_u,
+            base_params.diff_v,
+            base_params.dt,
+        ),
+        target_u,
+        target_v,
+    );
+    let kill_minus_loss = loss_for_params(
+        target,
+        GrayScottParams::new(
+            base_params.feed,
+            base_params.kill - epsilon,
+            base_params.diff_u,
+            base_params.diff_v,
+            base_params.dt,
+        ),
+        target_u,
+        target_v,
+    );
+    let denominator = f64::from(2.0 * epsilon);
+
+    FiniteDifferenceGradient {
+        feed: (feed_plus_loss - feed_minus_loss) / denominator,
+        kill: (kill_plus_loss - kill_minus_loss) / denominator,
+        base_loss,
+        feed_plus_loss,
+        feed_minus_loss,
+        kill_plus_loss,
+        kill_minus_loss,
+        epsilon,
+        evaluated: 5,
+    }
+}
+
 pub fn grid_search(
     target: InverseTarget,
     config: GridSearchConfig,
@@ -162,6 +259,34 @@ mod tests {
         let u = [1.0, 0.5, 0.25];
         let v = [0.0, 0.25, 0.5];
         assert_eq!(field_mse(&u, &v, &u, &v), 0.0);
+    }
+
+    #[test]
+    fn loss_for_params_is_zero_at_target_parameters() {
+        let params = GrayScottParams::new(0.060, 0.062, 0.16, 0.08, 1.0);
+        let target = InverseTarget::new(32, 32, 50, 5, params);
+        let (target_u, target_v) = generate_target(target);
+
+        let loss = loss_for_params(target, params, &target_u, &target_v);
+
+        assert_eq!(loss, 0.0);
+    }
+
+    #[test]
+    fn finite_difference_gradient_is_finite_for_off_target_guess() {
+        let target_params = GrayScottParams::new(0.06055, 0.06245, 0.16, 0.08, 1.0);
+        let target = InverseTarget::new(32, 32, 100, 5, target_params);
+        let (target_u, target_v) = generate_target(target);
+        let guess = GrayScottParams::new(0.060, 0.063, 0.16, 0.08, 1.0);
+
+        let gradient = finite_difference_gradient(target, guess, &target_u, &target_v, 1.0e-4);
+
+        assert!(gradient.base_loss > 0.0);
+        assert!(gradient.feed.is_finite());
+        assert!(gradient.kill.is_finite());
+        assert!(gradient.feed.abs() > 0.0);
+        assert!(gradient.kill.abs() > 0.0);
+        assert_eq!(gradient.evaluated, 5);
     }
 
     #[test]

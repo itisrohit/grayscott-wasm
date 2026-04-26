@@ -191,6 +191,16 @@ This is a baseline, not the final differentiable method. It gives the paper a
 clear recovery target that finite-difference gradients and forward-mode AD must
 match or improve.
 
+Current finite-difference gradient command:
+
+```bash
+cargo run --release --bin inverse_grad -- \
+  --width 64 --height 64 --steps 100 \
+  --target-feed 0.06055 --target-kill 0.06245 \
+  --guess-feed 0.060 --guess-kill 0.063 \
+  --epsilon 0.0001
+```
+
 Current inverse result:
 
 - A `64 x 64`, 100-step target with `F = 0.060` and `k = 0.062` is recovered
@@ -198,8 +208,10 @@ Current inverse result:
 - An off-grid `64 x 64`, 100-step target with `F = 0.06055` and `k = 0.06245`
   is recovered to the nearest 11-by-11 grid candidate, with absolute parameter
   errors of `0.00005` for both `F` and `k`.
-- These validate the inverse-recovery harness, but the next step is still a
-  non-grid-aligned recovery method such as finite-difference gradient descent.
+- Central finite differences now estimate the loss gradient with respect to `F`
+  and `k`; this becomes the comparison target for forward-mode AD.
+- These validate the inverse-recovery harness, but the next step is still an
+  optimizer loop and then forward-mode AD.
 
 ---
 
