@@ -187,6 +187,15 @@ cargo run --release --bin inverse_grid -- \
   --kill-min 0.060 --kill-max 0.065 --kill-count 11
 ```
 
+Current multi-regime inverse recovery command:
+
+```bash
+cargo run --release --bin inverse_regimes -- \
+  --width 64 --height 64 --steps 100 \
+  --feed-min 0.045 --feed-max 0.070 --feed-count 51 \
+  --kill-min 0.055 --kill-max 0.070 --kill-count 31
+```
+
 This is a baseline, not the final differentiable method. It gives the paper a
 clear recovery target that finite-difference gradients and forward-mode AD must
 match or improve.
@@ -238,6 +247,10 @@ Current inverse result:
 - An off-grid `64 x 64`, 100-step target with `F = 0.06055` and `k = 0.06245`
   is recovered to the nearest 11-by-11 grid candidate, with absolute parameter
   errors of `0.00005` for both `F` and `k`.
+- A three-regime grid-search check recovers close parameters across tested
+  regimes, but the lower-feed case has larger `F` error (`0.000750`) despite low
+  field loss. This supports the existing caution that inverse recovery should be
+  reported with both field loss and parameter error.
 - Central finite differences now estimate the loss gradient with respect to `F`
   and `k`; this becomes the comparison target for forward-mode AD.
 - Fixed-step finite-difference gradient descent reduces pattern loss from
@@ -247,11 +260,19 @@ Current inverse result:
 - In native overhead measurements at `128x128` and `256x256`, finite differences
   cost about `5.0x` a primal loss evaluation, while forward-mode AD costs about
   `2.6x`.
+- The `64x64` overhead ratio is not treated as stable because the small timing
+  scale is noisy. The defensible Experiment 4 claim is the larger-grid result:
+  forward-mode AD is roughly `2x` cheaper than finite differences per
+  two-parameter gradient query.
+- The `2.6x` AD overhead is likely dominated partly by memory traffic/cache
+  pressure from carrying value plus two derivatives per field cell, not just
+  arithmetic. This belongs in the discussion and motivates adjoint/reverse-mode
+  methods for larger parameter counts.
 - The optimizer result also shows that lower pattern loss does not necessarily
   mean smaller raw parameter distance to the generating parameters, so inverse
   recovery claims must report both loss and parameter error.
-- These validate the inverse-recovery harness, but the next step is forward-mode
-  AD and gradient comparison.
+- These validate the inverse-recovery harness, but the next step is noise
+  sensitivity or longer-rollout inverse recovery.
 
 ---
 

@@ -476,10 +476,52 @@ Interpretation:
   the native overhead benchmark. At `128x128` and `256x256`, finite differences
   are about `5.0x` primal cost, while forward-mode AD is about `2.6x` primal
   cost.
+- Do not treat the `64x64` overhead ratio as stable. The sub-millisecond-to-low
+  millisecond timings are sensitive to local timing noise, and an earlier
+  `64x64` run reported a lower AD overhead. The defensible overhead conclusion
+  should be based on `128x128` and `256x256`, where min/max spreads are tight.
+- At production-relevant grid sizes in this benchmark, forward-mode AD is
+  roughly `2x` cheaper per two-parameter gradient query than central finite
+  differences.
+- The measured `2.6x` AD overhead is higher than the idealized arithmetic-only
+  expectation because the dual-number fields carry value plus two derivatives.
+  For `256x256`, the current dual state stores `u`, `v`, `next_u`, and `next_v`
+  as three-float cells, which increases memory traffic and cache pressure. This
+  is also why adjoint or reverse-mode methods become more attractive for larger
+  parameter sets or larger grids.
 - The parameter error does not monotonically track the pattern loss in this run:
   `F` moves farther from the generating value while the field MSE drops. This is
   important evidence that the inverse problem can be locally ambiguous under a
   final-pattern MSE objective.
+
+Multi-regime inverse recovery command:
+
+```bash
+cargo run --release --bin inverse_regimes -- \
+  --width 64 --height 64 --steps 100 \
+  --feed-min 0.045 --feed-max 0.070 --feed-count 51 \
+  --kill-min 0.055 --kill-max 0.070 --kill-count 31
+```
+
+Observed output:
+
+Grid: `64x64`, steps: `100`
+
+| Regime | Target F | Target k | Best F | Best k | F abs err | k abs err | Loss | Evaluated |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| default-off-grid | 0.060550 | 0.062450 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 2.997e-7 | 1581 |
+| lower-feed | 0.050250 | 0.060250 | 0.051000 | 0.060000 | 0.000750 | 0.000250 | 1.088e-6 | 1581 |
+| higher-feed | 0.067250 | 0.064750 | 0.067000 | 0.065000 | 0.000250 | 0.000250 | 1.238e-11 | 1581 |
+
+Multi-regime interpretation:
+
+- The grid-search inverse baseline recovers close parameters across all three
+  tested regimes, but it is not uniformly exact.
+- The `lower-feed` case has a larger feed error (`0.000750`) despite low field
+  loss, reinforcing that final-pattern MSE can be locally ambiguous.
+- This is still an unnoised, same-initial-condition recovery task. The next
+  defensibility step is noise sensitivity or longer rollouts.
+
 - This is a sanity baseline, not yet a strong inverse-problem result.
 - Next inverse checks should use more rollout steps, multiple target regimes,
   noisy targets, and forward-mode AD.

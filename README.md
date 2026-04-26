@@ -51,6 +51,15 @@ cargo run --release --bin inverse_grid -- \
   --kill-min 0.060 --kill-max 0.065 --kill-count 11
 ```
 
+Run multi-regime inverse recovery:
+
+```bash
+cargo run --release --bin inverse_regimes -- \
+  --width 64 --height 64 --steps 100 \
+  --feed-min 0.045 --feed-max 0.070 --feed-count 51 \
+  --kill-min 0.055 --kill-max 0.070 --kill-count 31
+```
+
 Run the inverse finite-difference gradient baseline:
 
 ```bash
