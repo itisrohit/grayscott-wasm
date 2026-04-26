@@ -678,6 +678,67 @@ AD optimizer interpretation:
   multi-start AD descent, then compare evaluation count, noisy loss, clean loss,
   and parameter error.
 
+Backtracking AD optimizer update:
+
+The next run adds an Armijo backtracking line search to the AD optimizer while
+leaving the fixed-step optimizer in the table for comparison. The backtracking
+settings are shrink `0.5`, Armijo constant `1e-4`, minimum step `1e-8`, and at
+most `12` backtracks per iteration. This follows the standard sufficient-decrease
+line-search pattern: start from an initial step, shrink until the candidate loss
+is low enough relative to the local gradient prediction.
+
+Command:
+
+```bash
+cargo run --release --bin inverse_ad_opt -- \
+  --width 64 --height 64 --steps 100 \
+  --noise-levels 0.000,0.020,0.050,0.100 \
+  --seeds 24301,24589,51966,48879 \
+  --iterations 8 --learning-rate 0.0001 \
+  --line-learning-rate 0.001 --line-shrink 0.5 \
+  --line-armijo 0.0001 --line-min-step 0.00000001 \
+  --line-max-backtracks 12 \
+  --feed-min 0.045 --feed-max 0.070 --feed-count 51 \
+  --kill-min 0.055 --kill-max 0.070 --kill-count 31
+```
+
+Observed `ad-line` rows:
+
+| Noise | Seed | Method | Final F | Final k | F abs err | k abs err | Loss vs noisy target | Loss vs clean target | Evaluated |
+|---:|---:|---|---:|---:|---:|---:|---:|---:|---:|
+| 0.000 | 24301 | ad-line | 0.059894 | 0.062671 | 0.000656 | 0.000221 | 1.740e-7 | 1.740e-7 | 17 |
+| 0.000 | 24589 | ad-line | 0.059894 | 0.062671 | 0.000656 | 0.000221 | 1.740e-7 | 1.740e-7 | 17 |
+| 0.000 | 51966 | ad-line | 0.059894 | 0.062671 | 0.000656 | 0.000221 | 1.740e-7 | 1.740e-7 | 17 |
+| 0.000 | 48879 | ad-line | 0.059894 | 0.062671 | 0.000656 | 0.000221 | 1.740e-7 | 1.740e-7 | 17 |
+| 0.020 | 24301 | ad-line | 0.059893 | 0.062667 | 0.000657 | 0.000217 | 7.188e-5 | 1.788e-7 | 17 |
+| 0.020 | 24589 | ad-line | 0.059893 | 0.062673 | 0.000657 | 0.000223 | 6.901e-5 | 1.755e-7 | 17 |
+| 0.020 | 51966 | ad-line | 0.059891 | 0.062670 | 0.000659 | 0.000220 | 7.058e-5 | 1.761e-7 | 17 |
+| 0.020 | 48879 | ad-line | 0.059893 | 0.062675 | 0.000657 | 0.000225 | 7.091e-5 | 1.787e-7 | 17 |
+| 0.050 | 24301 | ad-line | 0.059890 | 0.062657 | 0.000660 | 0.000207 | 4.425e-4 | 2.323e-7 | 17 |
+| 0.050 | 24589 | ad-line | 0.059889 | 0.062673 | 0.000661 | 0.000223 | 4.262e-4 | 1.766e-7 | 17 |
+| 0.050 | 51966 | ad-line | 0.059883 | 0.062666 | 0.000667 | 0.000216 | 4.351e-4 | 1.966e-7 | 17 |
+| 0.050 | 48879 | ad-line | 0.059890 | 0.062677 | 0.000660 | 0.000227 | 4.367e-4 | 1.849e-7 | 17 |
+| 0.100 | 24301 | ad-line | 0.059881 | 0.062636 | 0.000669 | 0.000186 | 1.757e-3 | 5.910e-7 | 17 |
+| 0.100 | 24589 | ad-line | 0.059877 | 0.062660 | 0.000673 | 0.000210 | 1.686e-3 | 2.511e-7 | 17 |
+| 0.100 | 51966 | ad-line | 0.059868 | 0.062653 | 0.000682 | 0.000203 | 1.728e-3 | 3.717e-7 | 17 |
+| 0.100 | 48879 | ad-line | 0.059880 | 0.062675 | 0.000670 | 0.000225 | 1.732e-3 | 1.815e-7 | 17 |
+
+Backtracking interpretation:
+
+- `ad-line` improves the fixed-step AD optimizer by roughly two orders of
+  magnitude on clean loss (`1.318e-5` to `1.740e-7`) while increasing evaluation
+  count only from `9` to `17`.
+- On the clean target, `ad-line` reaches lower field loss than the dense grid
+  candidate (`1.740e-7` vs `2.997e-7`) because it is not restricted to grid
+  points.
+- Under noise, `ad-line` stays near the same final parameter region across
+  seeds. Its noisy-target loss is competitive with grid search through `0.100`,
+  while its clean-target loss remains lower than the grid candidate in the noisy
+  failure cases.
+- Parameter error still tells a more nuanced story: grid search can have smaller
+  raw parameter error on the clean/noise-`0.020` cases, while `ad-line` can have
+  better field loss. The paper should report both.
+
 ---
 
 ## Next Validation Upgrade

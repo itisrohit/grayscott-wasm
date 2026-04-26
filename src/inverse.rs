@@ -68,6 +68,15 @@ pub struct GradientDescentConfig {
 }
 
 #[derive(Debug, Clone, Copy)]
+pub struct BacktrackingConfig {
+    pub descent: GradientDescentConfig,
+    pub shrink: f32,
+    pub armijo: f64,
+    pub min_step: f32,
+    pub max_backtracks: usize,
+}
+
+#[derive(Debug, Clone, Copy)]
 pub struct GradientDescentStep {
     pub iteration: usize,
     pub feed: f32,
@@ -402,6 +411,121 @@ pub fn forward_gradient_descent(
             .clamp(config.feed_min, config.feed_max);
         kill = (kill - config.learning_rate * gradient.kill as f32)
             .clamp(config.kill_min, config.kill_max);
+    }
+
+    GradientDescentResult { steps, evaluated }
+}
+
+pub fn forward_gradient_descent_backtracking(
+    target: InverseTarget,
+    config: BacktrackingConfig,
+    target_u: &[f32],
+    target_v: &[f32],
+) -> GradientDescentResult {
+    assert!(
+        config.descent.feed_min <= config.descent.feed_max,
+        "invalid feed bounds"
+    );
+    assert!(
+        config.descent.kill_min <= config.descent.kill_max,
+        "invalid kill bounds"
+    );
+    assert!(
+        config.descent.learning_rate > 0.0,
+        "learning_rate must be positive"
+    );
+    assert!(
+        config.shrink > 0.0 && config.shrink < 1.0,
+        "shrink must be in (0, 1)"
+    );
+    assert!(
+        config.armijo > 0.0 && config.armijo < 1.0,
+        "armijo must be in (0, 1)"
+    );
+    assert!(config.min_step > 0.0, "min_step must be positive");
+
+    let mut feed = config
+        .descent
+        .initial_feed
+        .clamp(config.descent.feed_min, config.descent.feed_max);
+    let mut kill = config
+        .descent
+        .initial_kill
+        .clamp(config.descent.kill_min, config.descent.kill_max);
+    let mut steps = Vec::with_capacity(config.descent.iterations + 1);
+    let mut evaluated = 0;
+
+    for iteration in 0..=config.descent.iterations {
+        let params = GrayScottParams::new(
+            feed,
+            kill,
+            config.descent.diff_u,
+            config.descent.diff_v,
+            config.descent.dt,
+        );
+        let gradient = forward_gradient(target, params, target_u, target_v);
+        evaluated += gradient.evaluated;
+        steps.push(GradientDescentStep {
+            iteration,
+            feed,
+            kill,
+            loss: gradient.loss,
+            grad_feed: gradient.feed,
+            grad_kill: gradient.kill,
+        });
+
+        if iteration == config.descent.iterations {
+            break;
+        }
+
+        let grad_feed = gradient.feed as f32;
+        let grad_kill = gradient.kill as f32;
+        let grad_norm_sq = gradient.feed * gradient.feed + gradient.kill * gradient.kill;
+        if grad_norm_sq == 0.0 {
+            break;
+        }
+
+        let mut step_size = config.descent.learning_rate;
+        let mut accepted = None;
+        for _ in 0..=config.max_backtracks {
+            let candidate_feed = (feed - step_size * grad_feed)
+                .clamp(config.descent.feed_min, config.descent.feed_max);
+            let candidate_kill = (kill - step_size * grad_kill)
+                .clamp(config.descent.kill_min, config.descent.kill_max);
+            let delta_feed = f64::from(candidate_feed - feed);
+            let delta_kill = f64::from(candidate_kill - kill);
+            let directional_decrease = gradient.feed * delta_feed + gradient.kill * delta_kill;
+
+            if directional_decrease >= 0.0 {
+                break;
+            }
+
+            let candidate_params = GrayScottParams::new(
+                candidate_feed,
+                candidate_kill,
+                config.descent.diff_u,
+                config.descent.diff_v,
+                config.descent.dt,
+            );
+            let candidate_loss = loss_for_params(target, candidate_params, target_u, target_v);
+            evaluated += 1;
+
+            if candidate_loss <= gradient.loss + config.armijo * directional_decrease {
+                accepted = Some((candidate_feed, candidate_kill));
+                break;
+            }
+
+            step_size *= config.shrink;
+            if step_size < config.min_step {
+                break;
+            }
+        }
+
+        let Some((candidate_feed, candidate_kill)) = accepted else {
+            break;
+        };
+        feed = candidate_feed;
+        kill = candidate_kill;
     }
 
     GradientDescentResult { steps, evaluated }
@@ -752,6 +876,42 @@ mod tests {
 
         assert_eq!(result.steps.len(), 4);
         assert_eq!(result.evaluated, 4);
+        assert!(last.loss < first.loss);
+    }
+
+    #[test]
+    fn forward_gradient_descent_backtracking_reduces_loss_from_off_target_guess() {
+        let target_params = GrayScottParams::new(0.06055, 0.06245, 0.16, 0.08, 1.0);
+        let target = InverseTarget::new(32, 32, 100, 5, target_params);
+        let (target_u, target_v) = generate_target(target);
+        let descent = GradientDescentConfig {
+            initial_feed: 0.060,
+            initial_kill: 0.063,
+            feed_min: 0.050,
+            feed_max: 0.070,
+            kill_min: 0.055,
+            kill_max: 0.070,
+            learning_rate: 1.0e-3,
+            epsilon: 1.0e-4,
+            iterations: 3,
+            diff_u: 0.16,
+            diff_v: 0.08,
+            dt: 1.0,
+        };
+        let config = BacktrackingConfig {
+            descent,
+            shrink: 0.5,
+            armijo: 1.0e-4,
+            min_step: 1.0e-8,
+            max_backtracks: 12,
+        };
+
+        let result = forward_gradient_descent_backtracking(target, config, &target_u, &target_v);
+        let first = result.steps.first().expect("missing first step");
+        let last = result.steps.last().expect("missing last step");
+
+        assert_eq!(result.steps.len(), 4);
+        assert!(result.evaluated >= 4);
         assert!(last.loss < first.loss);
     }
 

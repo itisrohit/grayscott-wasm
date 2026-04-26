@@ -215,6 +215,9 @@ cargo run --release --bin inverse_ad_opt -- \
   --noise-levels 0.000,0.020,0.050,0.100 \
   --seeds 24301,24589,51966,48879 \
   --iterations 8 --learning-rate 0.0001 \
+  --line-learning-rate 0.001 --line-shrink 0.5 \
+  --line-armijo 0.0001 --line-min-step 0.00000001 \
+  --line-max-backtracks 12 \
   --feed-min 0.045 --feed-max 0.070 --feed-count 51 \
   --kill-min 0.055 --kill-max 0.070 --kill-count 31
 ```
@@ -307,13 +310,19 @@ Current inverse result:
 - The optimizer result also shows that lower pattern loss does not necessarily
   mean smaller raw parameter distance to the generating parameters, so inverse
   recovery claims must report both loss and parameter error.
-- A fixed-step AD optimizer now runs against the same noise cases. It uses only
-  `9` evaluations per case versus `1581` grid candidates, stays stable across
-  the tested seeds, but does not yet beat dense grid search on clean/noisy loss.
-  This makes optimizer mechanics, not AD storage layout, the next best target.
-- These validate the inverse-recovery harness, but the next step is improving
-  the AD optimizer with backtracking line search or a small multi-start strategy
-  before making broader inverse-recovery claims.
+- A fixed-step AD optimizer runs against the same noise cases. It uses only `9`
+  evaluations per case versus `1581` grid candidates, stays stable across the
+  tested seeds, but does not beat dense grid search on clean/noisy loss.
+- An Armijo backtracking AD optimizer now improves that result: it uses `17`
+  evaluations per case, reaches lower clean loss than dense grid search on the
+  clean target (`1.740e-7` vs `2.997e-7`), and stays competitive with grid-search
+  noisy loss through noise amplitude `0.100`.
+- Backtracking uses the standard sufficient-decrease rule with shrink `0.5` and
+  Armijo constant `1e-4`; these are conventional conservative defaults for
+  gradient descent line search.
+- These validate the inverse-recovery harness enough to move next to
+  multi-start AD or longer-rollout validation before making broader
+  inverse-recovery claims.
 
 ---
 

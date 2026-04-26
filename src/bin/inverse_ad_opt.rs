@@ -1,6 +1,7 @@
 use grayscott_wasm::{
-    add_uniform_noise, forward_gradient_descent, generate_target, grid_search, loss_for_params,
-    GradientDescentConfig, GrayScottParams, GridSearchConfig, InverseTarget,
+    add_uniform_noise, forward_gradient_descent, forward_gradient_descent_backtracking,
+    generate_target, grid_search, loss_for_params, BacktrackingConfig, GradientDescentConfig,
+    GrayScottParams, GridSearchConfig, InverseTarget,
 };
 
 #[derive(Debug)]
@@ -14,6 +15,11 @@ struct Args {
     initial_feed: f32,
     initial_kill: f32,
     learning_rate: f32,
+    line_learning_rate: f32,
+    line_shrink: f32,
+    line_armijo: f64,
+    line_min_step: f32,
+    line_max_backtracks: usize,
     iterations: usize,
     noise_levels: Vec<f32>,
     seeds: Vec<u64>,
@@ -48,6 +54,11 @@ impl Default for Args {
             initial_feed: 0.060,
             initial_kill: 0.063,
             learning_rate: 1.0e-4,
+            line_learning_rate: 1.0e-3,
+            line_shrink: 0.5,
+            line_armijo: 1.0e-4,
+            line_min_step: 1.0e-8,
+            line_max_backtracks: 12,
             iterations: 8,
             noise_levels: vec![0.0, 0.020, 0.050, 0.100],
             seeds: vec![0x5eed, 0x600d, 0xcafe, 0xbeef],
@@ -105,11 +116,26 @@ fn main() {
         diff_v: args.diff_v,
         dt: args.dt,
     };
+    let line_config = BacktrackingConfig {
+        descent: GradientDescentConfig {
+            learning_rate: args.line_learning_rate,
+            ..opt_config
+        },
+        shrink: args.line_shrink,
+        armijo: args.line_armijo,
+        min_step: args.line_min_step,
+        max_backtracks: args.line_max_backtracks,
+    };
     let (clean_u, clean_v) = generate_target(target);
 
     println!(
-        "Grid: {}x{}, steps: {}, AD iterations: {}, learning_rate: {:.1e}",
-        args.width, args.height, args.steps, args.iterations, args.learning_rate
+        "Grid: {}x{}, steps: {}, AD iterations: {}, fixed learning_rate: {:.1e}, line initial step: {:.1e}",
+        args.width,
+        args.height,
+        args.steps,
+        args.iterations,
+        args.learning_rate,
+        args.line_learning_rate
     );
     println!();
     println!(
@@ -151,7 +177,26 @@ fn main() {
                 noise,
                 seed,
                 Row {
-                    method: "ad-opt",
+                    method: "ad-fixed",
+                    feed: last.feed,
+                    kill: last.kill,
+                    noisy_loss: last.loss,
+                    evaluated: opt.evaluated,
+                },
+            );
+
+            let opt =
+                forward_gradient_descent_backtracking(target, line_config, &noisy_u, &noisy_v);
+            let last = opt.steps.last().expect("optimizer produced no steps");
+            print_row(
+                &args,
+                target,
+                &clean_u,
+                &clean_v,
+                noise,
+                seed,
+                Row {
+                    method: "ad-line",
                     feed: last.feed,
                     kill: last.kill,
                     noisy_loss: last.loss,
@@ -214,6 +259,17 @@ impl Args {
                 "--learning-rate" => {
                     args.learning_rate = value.parse().expect("invalid --learning-rate")
                 }
+                "--line-learning-rate" => {
+                    args.line_learning_rate = value.parse().expect("invalid --line-learning-rate")
+                }
+                "--line-shrink" => args.line_shrink = value.parse().expect("invalid --line-shrink"),
+                "--line-armijo" => args.line_armijo = value.parse().expect("invalid --line-armijo"),
+                "--line-min-step" => {
+                    args.line_min_step = value.parse().expect("invalid --line-min-step")
+                }
+                "--line-max-backtracks" => {
+                    args.line_max_backtracks = value.parse().expect("invalid --line-max-backtracks")
+                }
                 "--iterations" => args.iterations = value.parse().expect("invalid --iterations"),
                 "--noise-levels" => {
                     args.noise_levels = value
@@ -245,6 +301,19 @@ impl Args {
         assert_eq!(args.width, args.height, "only square grids are supported");
         assert!(args.steps > 0, "--steps must be non-zero");
         assert!(args.learning_rate > 0.0, "--learning-rate must be positive");
+        assert!(
+            args.line_learning_rate > 0.0,
+            "--line-learning-rate must be positive"
+        );
+        assert!(
+            args.line_shrink > 0.0 && args.line_shrink < 1.0,
+            "--line-shrink must be in (0, 1)"
+        );
+        assert!(
+            args.line_armijo > 0.0 && args.line_armijo < 1.0,
+            "--line-armijo must be in (0, 1)"
+        );
+        assert!(args.line_min_step > 0.0, "--line-min-step must be positive");
         assert!(args.noise_levels.iter().all(|&noise| noise >= 0.0));
         assert!(!args.seeds.is_empty(), "--seeds must not be empty");
         assert!(args.feed_count > 0, "--feed-count must be non-zero");
