@@ -420,6 +420,22 @@ Observed summary:
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | 0.060550 | 0.062450 | 3.761e-5 | 0.059956 | 0.062867 | 0.000594 | 0.000417 | 1.317e-5 | 45 |
 
+Forward-mode AD gradient comparison command:
+
+```bash
+cargo run --release --bin inverse_ad -- \
+  --width 64 --height 64 --steps 100 \
+  --target-feed 0.06055 --target-kill 0.06245 \
+  --guess-feed 0.060 --guess-kill 0.063 \
+  --epsilon 0.0001
+```
+
+Observed output:
+
+| Grid | Steps | Target F | Target k | Guess F | Guess k | Loss | AD dLoss/dF | FD dLoss/dF | F rel delta | AD dLoss/dk | FD dLoss/dk | k rel delta |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 64x64 | 100 | 0.060550 | 0.062450 | 0.060000 | 0.063000 | 3.761e-5 | 6.971e-2 | 6.972e-2 | 2.418e-4 | 2.087e-1 | 2.088e-1 | 3.598e-4 |
+
 Interpretation:
 
 - The first inverse baseline correctly recovers the known target when the true
@@ -428,6 +444,8 @@ Interpretation:
   later AD validation.
 - Fixed-step finite-difference gradient descent reduces the pattern loss by about
   `65%` over 8 iterations for the current off-target guess.
+- Forward-mode AD matches the finite-difference gradient closely on the same
+  case, with relative deltas below `4e-4`.
 - The parameter error does not monotonically track the pattern loss in this run:
   `F` moves farther from the generating value while the field MSE drops. This is
   important evidence that the inverse problem can be locally ambiguous under a

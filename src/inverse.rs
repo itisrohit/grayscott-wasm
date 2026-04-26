@@ -44,6 +44,14 @@ pub struct FiniteDifferenceGradient {
 }
 
 #[derive(Debug, Clone, Copy)]
+pub struct ForwardGradient {
+    pub feed: f64,
+    pub kill: f64,
+    pub loss: f64,
+    pub evaluated: usize,
+}
+
+#[derive(Debug, Clone, Copy)]
 pub struct GradientDescentConfig {
     pub initial_feed: f32,
     pub initial_kill: f32,
@@ -229,6 +237,79 @@ pub fn finite_difference_gradient(
     }
 }
 
+pub fn forward_gradient(
+    target: InverseTarget,
+    base_params: GrayScottParams,
+    target_u: &[f32],
+    target_v: &[f32],
+) -> ForwardGradient {
+    let len = target
+        .width
+        .checked_mul(target.height)
+        .expect("grid dimensions overflow usize");
+    assert_eq!(
+        target_u.len(),
+        len,
+        "target_u length must equal width * height"
+    );
+    assert_eq!(
+        target_v.len(),
+        len,
+        "target_v length must equal width * height"
+    );
+
+    let mut u = vec![Dual2::constant(1.0); len];
+    let mut v = vec![Dual2::constant(0.0); len];
+    let mut next_u = u.clone();
+    let mut next_v = v.clone();
+    seed_dual_square(&mut u, &mut v, target.width, target.height, target.radius);
+    next_u.copy_from_slice(&u);
+    next_v.copy_from_slice(&v);
+
+    let params = DualParams {
+        feed: Dual2::variable_feed(base_params.feed),
+        kill: Dual2::variable_kill(base_params.kill),
+        diff_u: Dual2::constant(base_params.diff_u),
+        diff_v: Dual2::constant(base_params.diff_v),
+        dt: Dual2::constant(base_params.dt),
+    };
+
+    for _ in 0..target.steps {
+        step_dual(
+            target.width,
+            target.height,
+            &u,
+            &v,
+            &mut next_u,
+            &mut next_v,
+            params,
+        );
+        core::mem::swap(&mut u, &mut next_u);
+        core::mem::swap(&mut v, &mut next_v);
+    }
+
+    let mut loss = 0.0_f64;
+    let mut grad_feed = 0.0_f64;
+    let mut grad_kill = 0.0_f64;
+    let denom = (2 * len) as f64;
+    for ((cell_u, &target_u), (cell_v, &target_v)) in
+        u.iter().zip(target_u).zip(v.iter().zip(target_v))
+    {
+        let du = f64::from(cell_u.value - target_u);
+        let dv = f64::from(cell_v.value - target_v);
+        loss += du * du + dv * dv;
+        grad_feed += 2.0 * du * f64::from(cell_u.d_feed) + 2.0 * dv * f64::from(cell_v.d_feed);
+        grad_kill += 2.0 * du * f64::from(cell_u.d_kill) + 2.0 * dv * f64::from(cell_v.d_kill);
+    }
+
+    ForwardGradient {
+        feed: grad_feed / denom,
+        kill: grad_kill / denom,
+        loss: loss / denom,
+        evaluated: 1,
+    }
+}
+
 pub fn gradient_descent(
     target: InverseTarget,
     config: GradientDescentConfig,
@@ -325,6 +406,142 @@ fn seeded_sim(width: usize, height: usize, radius: usize) -> GrayScott {
     sim
 }
 
+#[derive(Debug, Clone, Copy)]
+struct DualParams {
+    feed: Dual2,
+    kill: Dual2,
+    diff_u: Dual2,
+    diff_v: Dual2,
+    dt: Dual2,
+}
+
+#[derive(Debug, Clone, Copy)]
+struct Dual2 {
+    value: f32,
+    d_feed: f32,
+    d_kill: f32,
+}
+
+impl Dual2 {
+    const fn constant(value: f32) -> Self {
+        Self {
+            value,
+            d_feed: 0.0,
+            d_kill: 0.0,
+        }
+    }
+
+    const fn variable_feed(value: f32) -> Self {
+        Self {
+            value,
+            d_feed: 1.0,
+            d_kill: 0.0,
+        }
+    }
+
+    const fn variable_kill(value: f32) -> Self {
+        Self {
+            value,
+            d_feed: 0.0,
+            d_kill: 1.0,
+        }
+    }
+}
+
+impl core::ops::Add for Dual2 {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Self {
+            value: self.value + rhs.value,
+            d_feed: self.d_feed + rhs.d_feed,
+            d_kill: self.d_kill + rhs.d_kill,
+        }
+    }
+}
+
+impl core::ops::Sub for Dual2 {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self {
+            value: self.value - rhs.value,
+            d_feed: self.d_feed - rhs.d_feed,
+            d_kill: self.d_kill - rhs.d_kill,
+        }
+    }
+}
+
+impl core::ops::Mul for Dual2 {
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        Self {
+            value: self.value * rhs.value,
+            d_feed: self.d_feed * rhs.value + self.value * rhs.d_feed,
+            d_kill: self.d_kill * rhs.value + self.value * rhs.d_kill,
+        }
+    }
+}
+
+fn seed_dual_square(u: &mut [Dual2], v: &mut [Dual2], width: usize, height: usize, radius: usize) {
+    let center_x = width / 2;
+    let center_y = height / 2;
+    let min_x = center_x.saturating_sub(radius);
+    let max_x = center_x.saturating_add(radius).min(width - 1);
+    let min_y = center_y.saturating_sub(radius);
+    let max_y = center_y.saturating_add(radius).min(height - 1);
+
+    for y in min_y..=max_y {
+        for x in min_x..=max_x {
+            let i = y * width + x;
+            u[i] = Dual2::constant(0.50);
+            v[i] = Dual2::constant(0.25);
+        }
+    }
+}
+
+fn step_dual(
+    width: usize,
+    height: usize,
+    u: &[Dual2],
+    v: &[Dual2],
+    next_u: &mut [Dual2],
+    next_v: &mut [Dual2],
+    params: DualParams,
+) {
+    let four = Dual2::constant(4.0);
+    let one = Dual2::constant(1.0);
+
+    for y in 0..height {
+        let y_up = if y == 0 { height - 1 } else { y - 1 };
+        let y_down = if y + 1 == height { 0 } else { y + 1 };
+
+        for x in 0..width {
+            let x_left = if x == 0 { width - 1 } else { x - 1 };
+            let x_right = if x + 1 == width { 0 } else { x + 1 };
+
+            let center = y * width + x;
+            let left = y * width + x_left;
+            let right = y * width + x_right;
+            let up = y_up * width + x;
+            let down = y_down * width + x;
+
+            let u_center = u[center];
+            let v_center = v[center];
+            let lap_u = u[left] + u[right] + u[up] + u[down] - four * u_center;
+            let lap_v = v[left] + v[right] + v[up] + v[down] - four * v_center;
+            let uvv = u_center * v_center * v_center;
+
+            next_u[center] = u_center
+                + params.dt * (params.diff_u * lap_u - uvv + params.feed * (one - u_center));
+            next_v[center] = v_center
+                + params.dt
+                    * (params.diff_v * lap_v + uvv - (params.feed + params.kill) * v_center);
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -362,6 +579,31 @@ mod tests {
         assert!(gradient.feed.abs() > 0.0);
         assert!(gradient.kill.abs() > 0.0);
         assert_eq!(gradient.evaluated, 5);
+    }
+
+    #[test]
+    fn forward_gradient_matches_finite_difference_baseline() {
+        let target_params = GrayScottParams::new(0.06055, 0.06245, 0.16, 0.08, 1.0);
+        let target = InverseTarget::new(32, 32, 100, 5, target_params);
+        let (target_u, target_v) = generate_target(target);
+        let guess = GrayScottParams::new(0.060, 0.063, 0.16, 0.08, 1.0);
+
+        let finite = finite_difference_gradient(target, guess, &target_u, &target_v, 1.0e-4);
+        let forward = forward_gradient(target, guess, &target_u, &target_v);
+
+        assert!((forward.loss - finite.base_loss).abs() <= 1.0e-10);
+        assert_relative_close(forward.feed, finite.feed, 0.025);
+        assert_relative_close(forward.kill, finite.kill, 0.025);
+        assert_eq!(forward.evaluated, 1);
+    }
+
+    fn assert_relative_close(actual: f64, expected: f64, tolerance: f64) {
+        let scale = expected.abs().max(1.0e-12);
+        let relative = (actual - expected).abs() / scale;
+        assert!(
+            relative <= tolerance,
+            "actual={actual}, expected={expected}, relative={relative}, tolerance={tolerance}"
+        );
     }
 
     #[test]

@@ -71,6 +71,16 @@ cargo run --release --bin inverse_opt -- \
   --learning-rate 0.0001 --epsilon 0.0001 --iterations 8
 ```
 
+Compare forward-mode AD gradients against finite differences:
+
+```bash
+cargo run --release --bin inverse_ad -- \
+  --width 64 --height 64 --steps 100 \
+  --target-feed 0.06055 --target-kill 0.06245 \
+  --guess-feed 0.060 --guess-kill 0.063 \
+  --epsilon 0.0001
+```
+
 Run the JavaScript scalar forward benchmark:
 
 ```bash
