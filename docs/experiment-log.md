@@ -436,6 +436,26 @@ Observed output:
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | 64x64 | 100 | 0.060550 | 0.062450 | 0.060000 | 0.063000 | 3.761e-5 | 6.971e-2 | 6.972e-2 | 2.418e-4 | 2.087e-1 | 2.088e-1 | 3.598e-4 |
 
+Inverse-gradient overhead benchmark command:
+
+```bash
+cargo run --release --bin bench_inverse -- \
+  --width 64 --height 64 --steps 100 --trials 7 \
+  --target-feed 0.06055 --target-kill 0.06245 \
+  --guess-feed 0.060 --guess-kill 0.063 \
+  --epsilon 0.0001
+```
+
+Observed output:
+
+Grid: `64x64`, steps: `100`, trials: `7`
+
+| Method | Solver evaluations | Median ms | Min ms | Max ms | Overhead vs primal | Checksum |
+|---|---:|---:|---:|---:|---:|---:|
+| Primal loss | 1 | 2.146708 | 1.190459 | 3.385834 | 1.00x | 3.761030e-5 |
+| Finite difference gradient | 5 | 7.579333 | 6.390458 | 10.527417 | 3.53x | 2.785345e-1 |
+| Forward-mode AD gradient | 1 | 3.002334 | 2.953125 | 3.107542 | 1.40x | 2.784426e-1 |
+
 Interpretation:
 
 - The first inverse baseline correctly recovers the known target when the true
@@ -446,6 +466,9 @@ Interpretation:
   `65%` over 8 iterations for the current off-target guess.
 - Forward-mode AD matches the finite-difference gradient closely on the same
   case, with relative deltas below `4e-4`.
+- Forward-mode AD is substantially cheaper than central finite differences in
+  the first native overhead benchmark: `1.40x` primal cost vs `3.53x` primal
+  cost for finite differences.
 - The parameter error does not monotonically track the pattern loss in this run:
   `F` moves farther from the generating value while the field MSE drops. This is
   important evidence that the inverse problem can be locally ambiguous under a

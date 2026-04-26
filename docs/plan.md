@@ -221,6 +221,16 @@ cargo run --release --bin inverse_ad -- \
   --epsilon 0.0001
 ```
 
+Current inverse-gradient overhead benchmark command:
+
+```bash
+cargo run --release --bin bench_inverse -- \
+  --width 64 --height 64 --steps 100 --trials 7 \
+  --target-feed 0.06055 --target-kill 0.06245 \
+  --guess-feed 0.060 --guess-kill 0.063 \
+  --epsilon 0.0001
+```
+
 Current inverse result:
 
 - A `64 x 64`, 100-step target with `F = 0.060` and `k = 0.062` is recovered
@@ -234,6 +244,8 @@ Current inverse result:
   `3.761e-5` to `1.317e-5` over 8 iterations from the current off-target guess.
 - Forward-mode AD now matches central finite differences on the same case with
   relative gradient deltas below `4e-4`.
+- The next table to keep current is inverse-gradient overhead: primal loss vs
+  finite differences vs forward-mode AD.
 - The optimizer result also shows that lower pattern loss does not necessarily
   mean smaller raw parameter distance to the generating parameters, so inverse
   recovery claims must report both loss and parameter error.
