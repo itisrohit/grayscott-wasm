@@ -381,6 +381,70 @@ Interpretation:
 
 ---
 
+## Node.js WASM Forward Benchmark Method
+
+Build command:
+
+```bash
+bash tools/build_wasm_node.sh
+```
+
+Correctness smoke check:
+
+```bash
+node tools/check_wasm_node.mjs
+```
+
+Observed output:
+
+```text
+WASM checksum ok: 4056.932528740907
+```
+
+Benchmark command:
+
+```bash
+node tools/bench_forward_wasm.mjs --grids 128,256,512 --steps 500 --trials 5
+```
+
+Benchmark method:
+
+- Rust scalar solver compiled to WebAssembly with `wasm-pack`.
+- `wasm-pack build --target nodejs --release --out-dir pkg-node`.
+- Node.js loads the generated CommonJS package via `createRequire`.
+- Same seed, parameters, grids, steps, warmup, and trials as native Rust and JS
+  scalar benchmarks.
+- Timed loop calls `WasmGrayScott.run(steps)` once per trial, so per-step JS/WASM
+  boundary overhead is not included.
+
+Observed output:
+
+| Grid | Steps | Trials | Median ms/step | Min ms/step | Max ms/step | Median steps/s | Cells/s | Checksum |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| 128x128 | 500 | 5 | 0.066056 | 0.065813 | 0.066204 | 15138.57 | 2.480e8 | 16282.767486 |
+| 256x256 | 500 | 5 | 0.263475 | 0.262124 | 0.264311 | 3795.43 | 2.487e8 | 65434.767486 |
+| 512x512 | 500 | 5 | 1.053084 | 1.046151 | 1.060119 | 949.59 | 2.489e8 | 262042.767486 |
+
+Initial native Rust vs WASM vs JS scalar comparison:
+
+| Grid | Native Rust ms/step | WASM ms/step | JS ms/step | WASM vs JS | Native Rust vs WASM |
+|---|---:|---:|---:|---:|---:|
+| 128x128 | 0.050298 | 0.066056 | 0.083996 | 1.27x faster | 1.31x faster |
+| 256x256 | 0.176637 | 0.263475 | 0.331804 | 1.26x faster | 1.49x faster |
+| 512x512 | 0.707058 | 1.053084 | 1.289701 | 1.22x faster | 1.49x faster |
+
+Interpretation:
+
+- Scalar WASM is faster than scalar JavaScript in Node.js, but only by about
+  `1.22x-1.27x` in this setup.
+- Native Rust remains faster than scalar WASM by about `1.4x-1.6x`.
+- These results do not support an inflated `5x-15x` scalar WASM speedup claim.
+- The benchmark avoids per-step boundary overhead by calling `run(steps)` once per
+  trial. A separate benchmark should measure per-step JS/WASM boundary overhead if
+  the browser UI calls `step()` repeatedly.
+
+---
+
 ## Multi-Regime Full-Field Validation
 
 Commands:

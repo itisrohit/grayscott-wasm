@@ -47,6 +47,19 @@ Run the JavaScript scalar forward benchmark:
 node tools/bench_forward_js.mjs --grids 128,256,512 --steps 500 --trials 5
 ```
 
+Build the Node.js WASM package:
+
+```bash
+bash tools/build_wasm_node.sh
+```
+
+Check and benchmark the Node.js WASM package:
+
+```bash
+node tools/check_wasm_node.mjs
+node tools/bench_forward_wasm.mjs --grids 128,256,512 --steps 500 --trials 5
+```
+
 Check all JavaScript files:
 
 ```bash

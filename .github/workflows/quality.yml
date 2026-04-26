@@ -14,6 +14,10 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy,rustfmt
+          targets: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: cargo install wasm-pack --version 0.13.1 --locked
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7
@@ -23,23 +27,5 @@ jobs:
       - name: Sync Python dependencies
         run: uv sync --frozen
 
-      - name: Rust format
-        run: cargo fmt --check
-
-      - name: Rust lint
-        run: cargo clippy --all-targets -- -D warnings
-
-      - name: Rust tests
-        run: cargo test
-
-      - name: Python format
-        run: uv run ruff format --check .
-
-      - name: Python lint
-        run: uv run ruff check .
-
-      - name: Reference checks
-        run: |
-          uv run python tools/compare_scalar_reference.py
-          uv run python tools/compare_numpy_reference.py
-          uv run python tools/full_field_metrics.py --width 64 --height 64 --steps 100 500 1000
+      - name: Quality gate
+        run: bash tools/quality.sh
