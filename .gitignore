@@ -1,6 +1,5 @@
 # Rust
 /target
-Cargo.lock
 
 # WASM
 /pkg/
@@ -16,6 +15,7 @@ yarn-error.log*
 __pycache__/
 *.py[cod]
 *$py.class
+.uv-cache/
 .venv/
 env/
 venv/
