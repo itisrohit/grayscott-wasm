@@ -445,6 +445,70 @@ Interpretation:
 
 ---
 
+## WASM Full-Field Validation
+
+Command:
+
+```bash
+.venv/bin/python tools/wasm_full_field_metrics.py --width 64 --height 64 --steps 100 500 1000
+```
+
+Method:
+
+- Build the Node.js WASM package with `tools/build_wasm_node.sh`.
+- Export final `u` and `v` fields from `WasmGrayScott` as little-endian raw
+  `f32` arrays.
+- Load those arrays in Python and compare against the NumPy `float32` reference.
+
+Observed output:
+
+| Grid | Steps | u_MAE | v_MAE | u_RMSE | v_RMSE | u_MaxErr | v_MaxErr |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 64x64 | 100 | 2.184e-08 | 2.080e-09 | 4.181e-08 | 1.401e-08 | 2.384e-07 | 1.937e-07 |
+| 64x64 | 500 | 3.744e-08 | 1.014e-08 | 6.996e-08 | 3.951e-08 | 5.364e-07 | 3.725e-07 |
+| 64x64 | 1000 | 4.238e-08 | 1.755e-08 | 8.347e-08 | 5.602e-08 | 5.960e-07 | 5.364e-07 |
+
+Interpretation:
+
+- WASM full-field output agrees with the NumPy `float32` reference at the same
+  error level as native Rust for this case.
+- This validates that the wasm-bindgen wrapper is not changing numerical results.
+
+---
+
+## WASM Boundary Overhead Benchmark
+
+Command:
+
+```bash
+node tools/bench_wasm_boundary.mjs --grids 64,128,256 --steps 500 --trials 7
+```
+
+Method:
+
+- Bulk mode calls `WasmGrayScott.run(steps)` once per trial.
+- Per-step-call mode calls `WasmGrayScott.step()` from JS `steps` times.
+- Both modes use the same final checksum.
+
+Observed output:
+
+| Grid | Steps | Trials | Bulk ms/step | Per-step-call ms/step | Boundary overhead | Bulk checksum | Step checksum |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 64x64 | 500 | 7 | 0.017932 | 0.017917 | 1.00x | 3994.767486 | 3994.767486 |
+| 128x128 | 500 | 7 | 0.068324 | 0.066201 | 0.97x | 16282.767486 | 16282.767486 |
+| 256x256 | 500 | 7 | 0.262825 | 0.262816 | 1.00x | 65434.767486 | 65434.767486 |
+
+Interpretation:
+
+- For `64x64` and larger grids, JS/WASM boundary overhead is not visible above
+  timing noise because each step performs enough stencil work.
+- This does not prove boundary overhead is zero. A separate microbenchmark with a
+  no-op exported function would be needed to measure pure call overhead.
+- For the current solver, chunking steps for UI responsiveness can be chosen based
+  on rendering needs rather than measured call overhead at these grid sizes.
+
+---
+
 ## Multi-Regime Full-Field Validation
 
 Commands:

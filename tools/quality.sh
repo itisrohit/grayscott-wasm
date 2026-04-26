@@ -14,3 +14,4 @@ node tools/check_wasm_node.mjs
 .venv/bin/python tools/compare_scalar_reference.py
 .venv/bin/python tools/compare_numpy_reference.py
 .venv/bin/python tools/full_field_metrics.py --width 64 --height 64 --steps 100 500 1000
+.venv/bin/python tools/wasm_full_field_metrics.py --width 64 --height 64 --steps 100

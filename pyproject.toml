@@ -41,3 +41,4 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "tools/compare_*_reference.py" = ["E402", "I001"]
 "tools/full_field_metrics.py" = ["E402", "I001"]
+"tools/wasm_full_field_metrics.py" = ["E402", "I001"]

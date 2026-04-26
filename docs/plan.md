@@ -113,6 +113,52 @@ paper.
 
 ---
 
+## 2.1 Current Artifact Status
+
+As of the current implementation, the project has moved past planning for the
+forward solver. The following pieces exist and are measured:
+
+- Native Rust scalar solver.
+- Dependency-free Python scalar reference.
+- NumPy `float32` reference.
+- Node.js scalar JavaScript benchmark.
+- Node.js scalar WASM benchmark via `wasm-pack`.
+- Rust-vs-NumPy full-field validation.
+- WASM-vs-NumPy full-field validation.
+- Multi-grid and multi-regime correctness logs.
+- Local and CI quality gates:
+  - `cargo fmt --check`
+  - `cargo clippy --all-targets -- -D warnings`
+  - `cargo test`
+  - `ruff format --check`
+  - `ruff check`
+  - JavaScript syntax checks
+  - WASM build/check
+  - Rust/NumPy/WASM validation scripts
+
+Important measured result:
+
+- Scalar WASM is only about `1.22x-1.27x` faster than scalar JavaScript in the
+  current Node.js benchmark.
+- Native Rust is still about `1.31x-1.49x` faster than scalar WASM.
+- Therefore, the paper must not claim a large scalar WASM speedup. Any stronger
+  performance claim must come from measured SIMD, better memory access, or a
+  browser-specific result.
+
+Current quality command:
+
+```bash
+PRE_COMMIT_HOME=.pre-commit-cache .venv/bin/pre-commit run --all-files
+```
+
+Current WASM build command:
+
+```bash
+bash tools/build_wasm_node.sh
+```
+
+---
+
 ## 3. Prior Art And How To Position Against It
 
 ### Differentiable PDE / Physics Systems
@@ -290,6 +336,28 @@ WebAssembly.Memory.buffer -> Float32Array view
 
 Use `SharedArrayBuffer` only as an optional threaded extension.
 
+Current implementation note:
+
+- `WasmGrayScott` currently exposes `u_values()` and `v_values()` for validation.
+- Those functions copy the fields from WASM into JavaScript-owned arrays.
+- That is acceptable for correctness/export scripts, but it is not the right
+  browser rendering API.
+- Before building the browser renderer, add zero-copy accessors:
+
+```text
+u_ptr() -> *const f32
+v_ptr() -> *const f32
+```
+
+Then JavaScript should create typed-array views into WASM memory:
+
+```text
+Float32Array(wasm.memory.buffer, ptr, len)
+```
+
+This follows the Rust/WASM guidance to keep large, long-lived data in WASM memory
+and avoid copying/serialization across the JS/WASM boundary.
+
 ### SIMD
 
 Do not assume `#[target_feature(enable = "simd128")]` is enough. For Rust/WASM:
@@ -371,10 +439,15 @@ Metrics:
 - binary size,
 - startup/initialization cost,
 - browser version and hardware.
+- JS/WASM boundary mode:
+  - bulk `run(steps)`,
+  - repeated `step()` calls.
 
 Important:
 
 - Do not compare against JAX-GPU as if this project should win. It should not.
+- Do not assume WASM is dramatically faster than JavaScript. Current scalar
+  measurements show only modest speedup.
 
 ### Experiment 3 - Gradient Correctness
 
@@ -745,14 +818,23 @@ Rust dual-number / AD ecosystem:
 
 ## 13. First Concrete Next Step
 
-Do not start with the paper. Start with the artifact and validation.
+The original first step is complete: scalar Rust solver, references, validation,
+native benchmarks, JS benchmark, scalar WASM benchmark, and quality gates exist.
 
-Immediate task:
+Immediate next task:
 
-1. Create the scalar Rust solver.
-2. Create a NumPy `float32` reference solver.
-3. Save one initial condition to disk.
-4. Run both solvers for 100, 500, and 1000 steps.
-5. Produce the first correctness table.
+1. Add zero-copy WASM field access:
+   - `u_ptr()`
+   - `v_ptr()`
+   - exported WASM memory access in JS.
+2. Add a browser/Node check that typed-array views match `u_values()` and
+   `v_values()` without copying in the hot path.
+3. Add a renderer-facing benchmark:
+   - copy-based field export,
+   - zero-copy field view creation,
+   - optional grayscale buffer conversion.
+4. Then implement WASM SIMD as a separate interior-cell kernel and validate it
+   against scalar WASM.
 
-Only after that should SIMD, AD, inverse recovery, or writing begin.
+Only after scalar-vs-SIMD correctness and speed are measured should AD/inverse
+recovery begin.
