@@ -16,7 +16,7 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "reference"))
 
-import reference_numpy  # noqa: E402
+import reference_numpy
 
 
 def metrics(actual: np.ndarray, expected: np.ndarray) -> dict[str, float]:
@@ -29,7 +29,7 @@ def metrics(actual: np.ndarray, expected: np.ndarray) -> dict[str, float]:
     }
 
 
-def run_case(width: int, height: int, steps: int, radius: int) -> dict[str, object]:
+def run_case(args: argparse.Namespace, steps: int) -> dict[str, object]:
     with tempfile.TemporaryDirectory(prefix="grayscott-fields-") as temp:
         output_dir = Path(temp)
         try:
@@ -42,13 +42,23 @@ def run_case(width: int, height: int, steps: int, radius: int) -> dict[str, obje
                     "export_fields",
                     "--",
                     "--width",
-                    str(width),
+                    str(args.width),
                     "--height",
-                    str(height),
+                    str(args.height),
                     "--steps",
                     str(steps),
                     "--radius",
-                    str(radius),
+                    str(args.radius),
+                    "--feed",
+                    str(args.feed),
+                    "--kill",
+                    str(args.kill),
+                    "--diff-u",
+                    str(args.diff_u),
+                    "--diff-v",
+                    str(args.diff_v),
+                    "--dt",
+                    str(args.dt),
                     "--output-dir",
                     str(output_dir),
                 ],
@@ -65,27 +75,36 @@ def run_case(width: int, height: int, steps: int, radius: int) -> dict[str, obje
                 f"stderr:\n{err.stderr}"
             ) from err
 
-        rust_u = np.fromfile(output_dir / "u_f32_le.raw", dtype="<f4").reshape((height, width))
-        rust_v = np.fromfile(output_dir / "v_f32_le.raw", dtype="<f4").reshape((height, width))
+        rust_u = np.fromfile(output_dir / "u_f32_le.raw", dtype="<f4").reshape(
+            (args.height, args.width)
+        )
+        rust_v = np.fromfile(output_dir / "v_f32_le.raw", dtype="<f4").reshape(
+            (args.height, args.width)
+        )
 
-    args = argparse.Namespace(
-        width=width,
-        height=height,
+    reference_args = argparse.Namespace(
+        width=args.width,
+        height=args.height,
         steps=steps,
-        radius=radius,
-        feed=0.060,
-        kill=0.062,
-        diff_u=0.16,
-        diff_v=0.08,
-        dt=1.0,
+        radius=args.radius,
+        feed=args.feed,
+        kill=args.kill,
+        diff_u=args.diff_u,
+        diff_v=args.diff_v,
+        dt=args.dt,
     )
-    numpy_u, numpy_v = reference_numpy.run(args)
+    numpy_u, numpy_v = reference_numpy.run(reference_args)
 
     return {
-        "width": width,
-        "height": height,
+        "width": args.width,
+        "height": args.height,
         "steps": steps,
-        "radius": radius,
+        "radius": args.radius,
+        "feed": args.feed,
+        "kill": args.kill,
+        "diff_u": args.diff_u,
+        "diff_v": args.diff_v,
+        "dt": args.dt,
         "u": metrics(rust_u, numpy_u),
         "v": metrics(rust_v, numpy_v),
     }
@@ -97,10 +116,15 @@ def main() -> None:
     parser.add_argument("--height", type=int, default=64)
     parser.add_argument("--steps", type=int, nargs="+", default=[100, 500, 1000])
     parser.add_argument("--radius", type=int, default=5)
+    parser.add_argument("--feed", type=float, default=0.060)
+    parser.add_argument("--kill", type=float, default=0.062)
+    parser.add_argument("--diff-u", type=float, default=0.16)
+    parser.add_argument("--diff-v", type=float, default=0.08)
+    parser.add_argument("--dt", type=float, default=1.0)
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
 
-    rows = [run_case(args.width, args.height, steps, args.radius) for steps in args.steps]
+    rows = [run_case(args, steps) for steps in args.steps]
 
     if args.json:
         print(json.dumps(rows, indent=2, sort_keys=True))

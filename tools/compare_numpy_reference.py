@@ -12,7 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "reference"))
 
-import reference_numpy  # noqa: E402
+import reference_numpy
 
 
 LINE_RE = re.compile(

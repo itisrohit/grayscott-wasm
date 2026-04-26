@@ -10,6 +10,11 @@ struct Args {
     height: usize,
     steps: usize,
     radius: usize,
+    feed: f32,
+    kill: f32,
+    diff_u: f32,
+    diff_v: f32,
+    dt: f32,
     output_dir: PathBuf,
 }
 
@@ -20,6 +25,11 @@ impl Default for Args {
             height: 64,
             steps: 100,
             radius: 5,
+            feed: 0.060,
+            kill: 0.062,
+            diff_u: 0.16,
+            diff_v: 0.08,
+            dt: 1.0,
             output_dir: PathBuf::from("data/rust_fields"),
         }
     }
@@ -38,6 +48,11 @@ fn parse_args() -> Args {
             "--height" => args.height = value.parse().expect("invalid --height"),
             "--steps" => args.steps = value.parse().expect("invalid --steps"),
             "--radius" => args.radius = value.parse().expect("invalid --radius"),
+            "--feed" => args.feed = value.parse().expect("invalid --feed"),
+            "--kill" => args.kill = value.parse().expect("invalid --kill"),
+            "--diff-u" => args.diff_u = value.parse().expect("invalid --diff-u"),
+            "--diff-v" => args.diff_v = value.parse().expect("invalid --diff-v"),
+            "--dt" => args.dt = value.parse().expect("invalid --dt"),
             "--output-dir" => args.output_dir = PathBuf::from(value),
             _ => panic!("unknown argument: {flag}"),
         }
@@ -66,7 +81,10 @@ fn main() {
 
     let mut sim = GrayScott::new(args.width, args.height);
     sim.seed_square(args.width / 2, args.height / 2, args.radius);
-    sim.run(args.steps, GrayScottParams::default());
+    sim.run(
+        args.steps,
+        GrayScottParams::new(args.feed, args.kill, args.diff_u, args.diff_v, args.dt),
+    );
 
     let u_path = args.output_dir.join("u_f32_le.raw");
     let v_path = args.output_dir.join("v_f32_le.raw");
@@ -82,17 +100,25 @@ fn main() {
             "  \"height\": {},\n",
             "  \"steps\": {},\n",
             "  \"radius\": {},\n",
-            "  \"feed\": 0.060,\n",
-            "  \"kill\": 0.062,\n",
-            "  \"diff_u\": 0.16,\n",
-            "  \"diff_v\": 0.08,\n",
-            "  \"dt\": 1.0,\n",
+            "  \"feed\": {},\n",
+            "  \"kill\": {},\n",
+            "  \"diff_u\": {},\n",
+            "  \"diff_v\": {},\n",
+            "  \"dt\": {},\n",
             "  \"dtype\": \"f32_le\",\n",
             "  \"u\": \"u_f32_le.raw\",\n",
             "  \"v\": \"v_f32_le.raw\"\n",
             "}}\n"
         ),
-        args.width, args.height, args.steps, args.radius
+        args.width,
+        args.height,
+        args.steps,
+        args.radius,
+        args.feed,
+        args.kill,
+        args.diff_u,
+        args.diff_v,
+        args.dt
     );
     fs::write(&meta_path, metadata)
         .unwrap_or_else(|err| panic!("failed to write {meta_path:?}: {err}"));

@@ -31,10 +31,10 @@ fn standard_seeded_64x64_100_step_regression() {
     let (u_min, u_max, u_mean) = stats(sim.u());
     let (v_min, v_max, v_mean) = stats(sim.v());
 
-    assert_close(u_min, 0.306591392, 1.0e-6);
+    assert_close(u_min, 0.306_591_4, 1.0e-6);
     assert_close(u_max, 1.0, 1.0e-6);
-    assert_close(u_mean, 0.980694592, 1.0e-6);
+    assert_close(u_mean, 0.980_694_6, 1.0e-6);
     assert_close(v_min, 0.0, 1.0e-6);
-    assert_close(v_max, 0.420273542, 1.0e-6);
+    assert_close(v_max, 0.420_273_54, 1.0e-6);
     assert_close(v_mean, 0.009767476, 1.0e-6);
 }

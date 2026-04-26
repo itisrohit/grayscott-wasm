@@ -1,0 +1,45 @@
+name: Quality
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy,rustfmt
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8
+        with:
+          enable-cache: true
+
+      - name: Sync Python dependencies
+        run: uv sync --frozen
+
+      - name: Rust format
+        run: cargo fmt --check
+
+      - name: Rust lint
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Rust tests
+        run: cargo test
+
+      - name: Python format
+        run: uv run ruff format --check .
+
+      - name: Python lint
+        run: uv run ruff check .
+
+      - name: Reference checks
+        run: |
+          uv run python tools/compare_scalar_reference.py
+          uv run python tools/compare_numpy_reference.py
+          uv run python tools/full_field_metrics.py --width 64 --height 64 --steps 100 500 1000

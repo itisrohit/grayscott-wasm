@@ -212,7 +212,6 @@ Passed:
 
 Not yet done:
 
-- Multiple parameter regimes.
 - Native Rust performance benchmark.
 - JavaScript baseline.
 - WASM build.
@@ -289,4 +288,88 @@ Interpretation:
 
 Next validation upgrade:
 
-- Add multiple parameter regimes, not just `F=0.060, k=0.062`.
+- Add native Rust performance benchmark.
+
+---
+
+## Multi-Regime Full-Field Validation
+
+Commands:
+
+```bash
+.venv/bin/python tools/full_field_metrics.py --width 64 --height 64 --steps 100 500 1000 --feed 0.037 --kill 0.060
+.venv/bin/python tools/full_field_metrics.py --width 64 --height 64 --steps 100 500 1000 --feed 0.060 --kill 0.062
+.venv/bin/python tools/full_field_metrics.py --width 64 --height 64 --steps 100 500 1000 --feed 0.025 --kill 0.060
+.venv/bin/python tools/full_field_metrics.py --width 64 --height 64 --steps 100 500 1000 --feed 0.050 --kill 0.065
+```
+
+Observed output:
+
+| Grid | Steps | Regime | u_MAE | v_MAE | u_RMSE | v_RMSE | u_MaxErr | v_MaxErr |
+|---|---:|---|---:|---:|---:|---:|---:|---:|
+| 64x64 | 100 | F=0.037, k=0.060 | 2.467e-08 | 1.702e-09 | 4.218e-08 | 8.662e-09 | 1.788e-07 | 8.941e-08 |
+| 64x64 | 500 | F=0.037, k=0.060 | 5.736e-08 | 2.364e-08 | 1.066e-07 | 6.745e-08 | 7.749e-07 | 6.258e-07 |
+| 64x64 | 1000 | F=0.037, k=0.060 | 1.697e-07 | 1.002e-07 | 2.714e-07 | 1.794e-07 | 1.311e-06 | 9.537e-07 |
+| 64x64 | 100 | F=0.060, k=0.062 | 2.184e-08 | 2.080e-09 | 4.181e-08 | 1.401e-08 | 2.384e-07 | 1.937e-07 |
+| 64x64 | 500 | F=0.060, k=0.062 | 3.744e-08 | 1.014e-08 | 6.996e-08 | 3.951e-08 | 5.364e-07 | 3.725e-07 |
+| 64x64 | 1000 | F=0.060, k=0.062 | 4.238e-08 | 1.755e-08 | 8.347e-08 | 5.602e-08 | 5.960e-07 | 5.364e-07 |
+| 64x64 | 100 | F=0.025, k=0.060 | 3.746e-08 | 5.244e-09 | 6.252e-08 | 2.536e-08 | 4.172e-07 | 2.980e-07 |
+| 64x64 | 500 | F=0.025, k=0.060 | 5.345e-08 | 1.890e-08 | 9.784e-08 | 5.985e-08 | 6.557e-07 | 5.364e-07 |
+| 64x64 | 1000 | F=0.025, k=0.060 | 1.387e-07 | 5.978e-08 | 2.560e-07 | 1.432e-07 | 1.431e-06 | 9.984e-07 |
+| 64x64 | 100 | F=0.050, k=0.065 | 2.036e-08 | 2.540e-09 | 3.994e-08 | 1.584e-08 | 2.980e-07 | 2.235e-07 |
+| 64x64 | 500 | F=0.050, k=0.065 | 5.822e-08 | 2.027e-08 | 1.782e-07 | 1.363e-07 | 1.907e-06 | 1.788e-06 |
+| 64x64 | 1000 | F=0.050, k=0.065 | 6.430e-07 | 3.995e-07 | 3.380e-06 | 2.707e-06 | 3.833e-05 | 3.499e-05 |
+
+Interpretation:
+
+- All tested regimes match the NumPy `float32` reference at small absolute error.
+- The `F=0.050, k=0.065` regime accumulates more error by `1000` steps than the
+  others. This should be treated as a sensitive regime in later validation, not
+  ignored.
+- The larger `1000`-step error is still small in absolute terms, with max error
+  below `4e-5`.
+
+---
+
+## Quality Gate
+
+Local quality command:
+
+```bash
+bash tools/quality.sh
+```
+
+Pre-commit setup:
+
+```bash
+bash tools/install-hooks.sh
+```
+
+Manual pre-commit run:
+
+```bash
+PRE_COMMIT_HOME=.pre-commit-cache \
+.venv/bin/pre-commit run --all-files
+```
+
+Checks included:
+
+- `cargo fmt --check`
+- `cargo clippy --all-targets -- -D warnings`
+- `cargo test`
+- `ruff format --check .`
+- `ruff check .`
+- Rust vs scalar Python summary comparison
+- Rust vs NumPy `float32` summary comparison
+- Rust vs NumPy full-field metrics for `64 x 64`, `100/500/1000` steps
+
+CI:
+
+- `.github/workflows/quality.yml` runs the same quality gate on push and pull
+  request.
+
+Git hooks:
+
+- `.pre-commit-config.yaml` defines a local `quality-gate` hook that runs
+  `bash tools/quality.sh`.
+- `tools/install-hooks.sh` installs the hook for both `pre-commit` and `pre-push`.

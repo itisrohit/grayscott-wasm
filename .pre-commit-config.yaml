@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: quality-gate
+        name: full quality gate
+        entry: bash tools/quality.sh
+        language: system
+        pass_filenames: false
+        always_run: true

@@ -12,6 +12,12 @@ Set up Python tools:
 uv sync
 ```
 
+Install git hooks:
+
+```bash
+bash tools/install-hooks.sh
+```
+
 Run validation:
 
 ```bash
@@ -21,6 +27,19 @@ cargo run --example summary
 .venv/bin/python tools/compare_scalar_reference.py
 .venv/bin/python tools/compare_numpy_reference.py
 .venv/bin/python tools/full_field_metrics.py --width 64 --height 64 --steps 100 500 1000
+```
+
+Run the full local quality gate:
+
+```bash
+bash tools/quality.sh
+```
+
+Run the same gate through pre-commit:
+
+```bash
+PRE_COMMIT_HOME=.pre-commit-cache \
+.venv/bin/pre-commit run --all-files
 ```
 
 Run the NumPy reference directly:
