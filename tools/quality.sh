@@ -7,6 +7,7 @@ cargo test
 
 .venv/bin/ruff format --check .
 .venv/bin/ruff check .
+bash tools/check_js.sh
 
 .venv/bin/python tools/compare_scalar_reference.py
 .venv/bin/python tools/compare_numpy_reference.py

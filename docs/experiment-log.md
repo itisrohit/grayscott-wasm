@@ -338,6 +338,49 @@ Interpretation:
 
 ---
 
+## JavaScript Forward Benchmark Method
+
+Command:
+
+```bash
+node tools/bench_forward_js.mjs --grids 128,256,512 --steps 500 --trials 5
+```
+
+Benchmark method:
+
+- Node.js scalar JavaScript solver.
+- `Float32Array` storage for `u`, `v`, `next_u`, and `next_v`.
+- Same 5-point Laplacian, periodic boundaries, explicit Euler update, parameters,
+  seed, grids, steps, trials, and warmup as the native Rust scalar benchmark.
+
+Observed output:
+
+| Grid | Steps | Trials | Median ms/step | Min ms/step | Max ms/step | Median steps/s | Cells/s | Checksum |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| 128x128 | 500 | 5 | 0.083996 | 0.082724 | 0.085903 | 11905.40 | 1.951e8 | 16282.767663 |
+| 256x256 | 500 | 5 | 0.331804 | 0.322597 | 0.340275 | 3013.83 | 1.975e8 | 65434.767663 |
+| 512x512 | 500 | 5 | 1.289701 | 1.274529 | 2.264158 | 775.37 | 2.033e8 | 262042.767663 |
+
+Initial Rust-vs-JS scalar comparison:
+
+| Grid | Rust median ms/step | JS median ms/step | Rust speedup |
+|---|---:|---:|---:|
+| 128x128 | 0.050298 | 0.083996 | 1.67x |
+| 256x256 | 0.176637 | 0.331804 | 1.88x |
+| 512x512 | 0.707058 | 1.289701 | 1.82x |
+
+Interpretation:
+
+- Native Rust scalar is faster than Node.js scalar in this baseline, but the
+  speedup is about `1.7x-1.9x`, not the `5x-15x` sometimes claimed for WASM vs
+  naive JavaScript.
+- This is a CPU-native Rust comparison, not WASM yet. The browser/WASM comparison
+  must be measured separately.
+- JS checksum differs slightly from Rust because JavaScript arithmetic is double
+  precision with `Float32Array` stores, while Rust computes directly with `f32`.
+
+---
+
 ## Multi-Regime Full-Field Validation
 
 Commands:

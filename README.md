@@ -41,6 +41,18 @@ Run the native scalar forward benchmark:
 cargo run --release --bin bench_forward -- --grids 128,256,512 --steps 500 --trials 5
 ```
 
+Run the JavaScript scalar forward benchmark:
+
+```bash
+node tools/bench_forward_js.mjs --grids 128,256,512 --steps 500 --trials 5
+```
+
+Check all JavaScript files:
+
+```bash
+bash tools/check_js.sh
+```
+
 Run the same gate through pre-commit:
 
 ```bash
