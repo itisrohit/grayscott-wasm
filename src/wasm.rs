@@ -1,4 +1,5 @@
 use crate::{GrayScott, GrayScottParams};
+use js_sys::Float32Array;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -55,6 +56,22 @@ impl WasmGrayScott {
             .iter()
             .chain(self.inner.v())
             .fold(0.0f64, |sum, &value| sum + f64::from(value))
+    }
+
+    pub fn u_ptr(&self) -> *const f32 {
+        self.inner.u().as_ptr()
+    }
+
+    pub fn v_ptr(&self) -> *const f32 {
+        self.inner.v().as_ptr()
+    }
+
+    pub fn u_view(&self) -> Float32Array {
+        unsafe { Float32Array::view(self.inner.u()) }
+    }
+
+    pub fn v_view(&self) -> Float32Array {
+        unsafe { Float32Array::view(self.inner.v()) }
     }
 
     pub fn u_values(&self) -> Vec<f32> {

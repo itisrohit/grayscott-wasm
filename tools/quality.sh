@@ -10,6 +10,7 @@ cargo test
 bash tools/check_js.sh
 bash tools/build_wasm_node.sh
 node tools/check_wasm_node.mjs
+node tools/check_wasm_views.mjs
 
 .venv/bin/python tools/compare_scalar_reference.py
 .venv/bin/python tools/compare_numpy_reference.py

@@ -338,18 +338,21 @@ Use `SharedArrayBuffer` only as an optional threaded extension.
 
 Current implementation note:
 
-- `WasmGrayScott` currently exposes `u_values()` and `v_values()` for validation.
+- `WasmGrayScott` exposes `u_values()` and `v_values()` for validation.
 - Those functions copy the fields from WASM into JavaScript-owned arrays.
 - That is acceptable for correctness/export scripts, but it is not the right
   browser rendering API.
-- Before building the browser renderer, add zero-copy accessors:
+- The zero-copy accessors now exist:
 
 ```text
 u_ptr() -> *const f32
 v_ptr() -> *const f32
+u_view() -> Float32Array
+v_view() -> Float32Array
 ```
 
-Then JavaScript should create typed-array views into WASM memory:
+JavaScript can either use `u_view()`/`v_view()` directly or create typed-array
+views into WASM memory:
 
 ```text
 Float32Array(wasm.memory.buffer, ptr, len)
@@ -357,6 +360,12 @@ Float32Array(wasm.memory.buffer, ptr, len)
 
 This follows the Rust/WASM guidance to keep large, long-lived data in WASM memory
 and avoid copying/serialization across the JS/WASM boundary.
+
+Safety note:
+
+- Typed-array views into WASM memory are invalidated if the memory grows.
+- Browser rendering code should recreate views after any operation that may
+  allocate or grow memory.
 
 ### SIMD
 
@@ -823,17 +832,11 @@ native benchmarks, JS benchmark, scalar WASM benchmark, and quality gates exist.
 
 Immediate next task:
 
-1. Add zero-copy WASM field access:
-   - `u_ptr()`
-   - `v_ptr()`
-   - exported WASM memory access in JS.
-2. Add a browser/Node check that typed-array views match `u_values()` and
-   `v_values()` without copying in the hot path.
-3. Add a renderer-facing benchmark:
-   - copy-based field export,
-   - zero-copy field view creation,
-   - optional grayscale buffer conversion.
-4. Then implement WASM SIMD as a separate interior-cell kernel and validate it
+1. Add a renderer-facing grayscale conversion benchmark:
+   - `Float32Array` field view to `Uint8ClampedArray` pixels,
+   - optional color map,
+   - fixed render sizes.
+2. Then implement WASM SIMD as a separate interior-cell kernel and validate it
    against scalar WASM.
 
 Only after scalar-vs-SIMD correctness and speed are measured should AD/inverse

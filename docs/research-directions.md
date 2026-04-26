@@ -207,14 +207,22 @@ Action for this repo:
 
 1. Keep `WasmGrayScott` as the opaque long-lived simulation object.
 2. Keep `run(steps)` for benchmark and UI chunking.
-3. Add zero-copy field access before building a browser renderer:
+3. Use zero-copy field access before building a browser renderer:
    - `u_ptr() -> *const f32`
    - `v_ptr() -> *const f32`
-   - JS creates `Float32Array(wasm.memory.buffer, ptr, len)`.
+   - `u_view() -> Float32Array`
+   - `v_view() -> Float32Array`
 4. Keep `u_values()` and `v_values()` only for correctness/export scripts because
    they copy.
 5. Add a microbenchmark for pure call overhead only if the UI needs very small
    chunk sizes or very small grids.
+
+Current result:
+
+- `u_view()` and `v_view()` match copied fields exactly in the Node.js WASM check.
+- View creation plus sampling is substantially cheaper than copying full fields in
+  the current benchmark.
+- Views must be recreated if WASM memory grows.
 
 Sources:
 

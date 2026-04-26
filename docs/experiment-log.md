@@ -509,6 +509,55 @@ Interpretation:
 
 ---
 
+## WASM Zero-Copy Field View Benchmark
+
+Correctness command:
+
+```bash
+node tools/check_wasm_views.mjs
+```
+
+Observed output:
+
+```text
+WASM zero-copy views match copied fields exactly.
+```
+
+Benchmark command:
+
+```bash
+node tools/bench_wasm_views.mjs --grids 128,256,512 --trials 1000
+```
+
+Method:
+
+- Copy path calls `u_values()` and `v_values()`, which copy fields out of WASM
+  memory.
+- View path calls `u_view()` and `v_view()`, which return `Float32Array` views over
+  WASM memory without copying field data.
+- The benchmark samples three values from each field so both paths consume the
+  returned data.
+
+Observed output:
+
+| Grid | Cells | Trials | Copy ms/trial | View ms/trial | View speedup | Copy checksum | View checksum |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 128x128 | 16384 | 1000 | 0.028776 | 0.001195 | 24.08x | 3000.000000 | 3000.000000 |
+| 256x256 | 65536 | 1000 | 0.033051 | 0.000376 | 87.96x | 3000.000000 | 3000.000000 |
+| 512x512 | 262144 | 1000 | 0.139924 | 0.000249 | 560.82x | 3000.000000 | 3000.000000 |
+
+Interpretation:
+
+- Zero-copy field views remove the full-field copy cost and are the correct path
+  for browser rendering.
+- The view benchmark measures view creation plus sampling, not full image
+  rendering.
+- `Float32Array` views into WASM memory are invalidated if the WASM memory grows.
+  Rendering code should recreate views after operations that can allocate or grow
+  memory.
+
+---
+
 ## Multi-Regime Full-Field Validation
 
 Commands:
