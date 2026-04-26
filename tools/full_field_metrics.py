@@ -32,30 +32,38 @@ def metrics(actual: np.ndarray, expected: np.ndarray) -> dict[str, float]:
 def run_case(width: int, height: int, steps: int, radius: int) -> dict[str, object]:
     with tempfile.TemporaryDirectory(prefix="grayscott-fields-") as temp:
         output_dir = Path(temp)
-        subprocess.run(
-            [
-                "cargo",
-                "run",
-                "--quiet",
-                "--example",
-                "export_fields",
-                "--",
-                "--width",
-                str(width),
-                "--height",
-                str(height),
-                "--steps",
-                str(steps),
-                "--radius",
-                str(radius),
-                "--output-dir",
-                str(output_dir),
-            ],
-            cwd=ROOT,
-            check=True,
-            text=True,
-            capture_output=True,
-        )
+        try:
+            subprocess.run(
+                [
+                    "cargo",
+                    "run",
+                    "--quiet",
+                    "--example",
+                    "export_fields",
+                    "--",
+                    "--width",
+                    str(width),
+                    "--height",
+                    str(height),
+                    "--steps",
+                    str(steps),
+                    "--radius",
+                    str(radius),
+                    "--output-dir",
+                    str(output_dir),
+                ],
+                cwd=ROOT,
+                check=True,
+                text=True,
+                capture_output=True,
+            )
+        except subprocess.CalledProcessError as err:
+            raise RuntimeError(
+                "Rust field export failed\n"
+                f"command: {' '.join(err.cmd)}\n"
+                f"stdout:\n{err.stdout}\n"
+                f"stderr:\n{err.stderr}"
+            ) from err
 
         rust_u = np.fromfile(output_dir / "u_f32_le.raw", dtype="<f4").reshape((height, width))
         rust_v = np.fromfile(output_dir / "v_f32_le.raw", dtype="<f4").reshape((height, width))

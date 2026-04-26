@@ -206,11 +206,12 @@ Passed:
   `1e-5`.
 - Full-field Rust scalar output matches NumPy `float32` reference closely for
   `64 x 64` at `100`, `500`, and `1000` steps.
+- Full-field Rust scalar output matches NumPy `float32` reference closely for
+  `128 x 128`, `256 x 256`, and `512 x 512` at `100`, `500`, and `1000`
+  steps.
 
 Not yet done:
 
-- Multi-grid validation: `128 x 128`, `256 x 256`, `512 x 512`.
-- Multi-step validation: `100`, `500`, `1000`.
 - Multiple parameter regimes.
 - Native Rust performance benchmark.
 - JavaScript baseline.
@@ -251,5 +252,41 @@ Implementation note:
 
 Next upgrade:
 
-- Repeat full-field metrics for `128 x 128`, `256 x 256`, and `512 x 512`.
 - Add at least three more parameter regimes.
+
+---
+
+## Multi-Grid Full-Field Validation
+
+Commands:
+
+```bash
+.venv/bin/python tools/full_field_metrics.py --width 128 --height 128 --steps 100 500 1000
+.venv/bin/python tools/full_field_metrics.py --width 256 --height 256 --steps 100 500 1000
+.venv/bin/python tools/full_field_metrics.py --width 512 --height 512 --steps 100 500 1000
+```
+
+Observed output:
+
+| Grid | Steps | Regime | u_MAE | v_MAE | u_RMSE | v_RMSE | u_MaxErr | v_MaxErr |
+|---|---:|---|---:|---:|---:|---:|---:|---:|
+| 128x128 | 100 | F=0.060, k=0.062 | 5.461e-09 | 5.200e-10 | 2.091e-08 | 7.005e-09 | 2.384e-07 | 1.937e-07 |
+| 128x128 | 500 | F=0.060, k=0.062 | 9.361e-09 | 2.535e-09 | 3.498e-08 | 1.975e-08 | 5.364e-07 | 3.725e-07 |
+| 128x128 | 1000 | F=0.060, k=0.062 | 1.260e-08 | 4.387e-09 | 4.402e-08 | 2.801e-08 | 5.960e-07 | 5.364e-07 |
+| 256x256 | 100 | F=0.060, k=0.062 | 1.365e-09 | 1.300e-10 | 1.045e-08 | 3.502e-09 | 2.384e-07 | 1.937e-07 |
+| 256x256 | 500 | F=0.060, k=0.062 | 2.340e-09 | 6.337e-10 | 1.749e-08 | 9.877e-09 | 5.364e-07 | 3.725e-07 |
+| 256x256 | 1000 | F=0.060, k=0.062 | 3.150e-09 | 1.097e-09 | 2.201e-08 | 1.400e-08 | 5.960e-07 | 5.364e-07 |
+| 512x512 | 100 | F=0.060, k=0.062 | 3.413e-10 | 3.250e-11 | 5.226e-09 | 1.751e-09 | 2.384e-07 | 1.937e-07 |
+| 512x512 | 500 | F=0.060, k=0.062 | 5.850e-10 | 1.584e-10 | 8.745e-09 | 4.938e-09 | 5.364e-07 | 3.725e-07 |
+| 512x512 | 1000 | F=0.060, k=0.062 | 7.876e-10 | 2.742e-10 | 1.101e-08 | 7.002e-09 | 5.960e-07 | 5.364e-07 |
+
+Interpretation:
+
+- Full-field agreement remains tight through `512 x 512` and `1000` steps.
+- Max error remains below `6e-7` for both fields in this regime.
+- The decreasing MAE at larger grids is expected here because the same fixed-size
+  seed occupies a smaller fraction of the domain.
+
+Next validation upgrade:
+
+- Add multiple parameter regimes, not just `F=0.060, k=0.062`.
