@@ -9,6 +9,7 @@ cargo test
 .venv/bin/ruff check .
 bash tools/check_js.sh
 bash tools/build_wasm_node.sh
+bash tools/build_wasm_web.sh
 node tools/check_wasm_node.mjs
 node tools/check_wasm_views.mjs
 

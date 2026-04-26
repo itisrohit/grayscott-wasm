@@ -222,6 +222,49 @@ Not yet done:
 
 ---
 
+## Browser Render Benchmark Harness
+
+Implementation:
+
+- Browser WASM build:
+  - `tools/build_wasm_web.sh`
+  - output directory: `pkg-web/`
+- Browser benchmark page:
+  - `www/render_bench.html`
+  - `www/render_bench.js`
+  - `www/render_bench.css`
+
+Commands:
+
+```bash
+bash tools/build_wasm_web.sh
+python3 -m http.server 8000
+```
+
+Open:
+
+```text
+http://localhost:8000/www/render_bench.html
+```
+
+Metrics recorded by the page:
+
+- `Float32Array` field view to reusable `Uint8ClampedArray` RGBA buffer.
+- `new ImageData(pixels, width, height)`.
+- 2D canvas `putImageData`.
+- OffscreenCanvas `putImageData`, when supported.
+- OffscreenCanvas `transferToImageBitmap` plus `bitmaprenderer` transfer, when
+  supported.
+
+Current result:
+
+- Harness added.
+- Real browser measurements are pending and must be recorded with browser name,
+  version, operating system, grid size, frame count, and user agent before the
+  paper claims browser rendering performance.
+
+---
+
 ## Next Validation Upgrade
 
 The first full-field correctness milestone now compares full fields, not only

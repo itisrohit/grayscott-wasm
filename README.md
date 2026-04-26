@@ -53,6 +53,12 @@ Build the Node.js WASM package:
 bash tools/build_wasm_node.sh
 ```
 
+Build the browser WASM package:
+
+```bash
+bash tools/build_wasm_web.sh
+```
+
 Check and benchmark the Node.js WASM package:
 
 ```bash
@@ -63,6 +69,19 @@ node tools/bench_forward_wasm.mjs --grids 128,256,512 --steps 500 --trials 5
 node tools/bench_wasm_boundary.mjs --grids 64,128,256 --steps 500 --trials 7
 node tools/bench_wasm_views.mjs --grids 128,256,512 --trials 1000
 node tools/bench_grayscale_render.mjs --grids 128,256,512 --trials 200
+```
+
+Run the browser render benchmark:
+
+```bash
+bash tools/build_wasm_web.sh
+python3 -m http.server 8000
+```
+
+Then open:
+
+```text
+http://localhost:8000/www/render_bench.html
 ```
 
 Check all JavaScript files:

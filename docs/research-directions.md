@@ -232,11 +232,20 @@ Renderer-facing benchmark direction:
   offscreen canvas path.
 - Benchmark the conversion from `Float32Array` field view to reusable
   `Uint8ClampedArray` pixel buffer before building UI.
+- The repo now includes `www/render_bench.html`, which measures field-to-RGBA
+  conversion, `ImageData` construction, `putImageData`, and optional
+  OffscreenCanvas/ImageBitmap transfer in a real browser.
 
 Source:
 
 - MDN `ImageData.data`:
   https://developer.mozilla.org/en-US/docs/Web/API/ImageData/data
+- MDN `CanvasRenderingContext2D.putImageData`:
+  https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/putImageData
+- MDN `OffscreenCanvas.transferToImageBitmap`:
+  https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas/transferToImageBitmap
+- MDN `ImageBitmapRenderingContext.transferFromImageBitmap`:
+  https://developer.mozilla.org/en-US/docs/Web/API/ImageBitmapRenderingContext/transferFromImageBitmap
 
 Sources:
 

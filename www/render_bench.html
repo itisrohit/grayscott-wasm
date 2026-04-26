@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gray-Scott Browser Render Benchmark</title>
+    <link rel="stylesheet" href="./render_bench.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Gray-Scott Browser Render Benchmark</h1>
+        <button id="run" type="button">Run</button>
+      </header>
+
+      <section class="controls" aria-label="Benchmark settings">
+        <label>
+          Grid
+          <select id="grid">
+            <option value="128">128 x 128</option>
+            <option value="256" selected>256 x 256</option>
+            <option value="512">512 x 512</option>
+          </select>
+        </label>
+        <label>
+          Frames
+          <input id="frames" type="number" min="30" max="2000" step="30" value="300" />
+        </label>
+        <label>
+          Warmup steps
+          <input id="steps" type="number" min="0" max="5000" step="50" value="100" />
+        </label>
+      </section>
+
+      <section class="stage" aria-label="Render outputs">
+        <canvas id="canvas" width="256" height="256"></canvas>
+        <canvas id="bitmap-canvas" width="256" height="256"></canvas>
+      </section>
+
+      <section class="results" aria-label="Benchmark results">
+        <table>
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>ms/frame</th>
+            </tr>
+          </thead>
+          <tbody id="results"></tbody>
+        </table>
+        <pre id="status">Ready.</pre>
+      </section>
+    </main>
+
+    <script type="module" src="./render_bench.js"></script>
+  </body>
+</html>

@@ -125,6 +125,7 @@ forward solver. The following pieces exist and are measured:
 - Node.js scalar WASM benchmark via `wasm-pack`.
 - Rust-vs-NumPy full-field validation.
 - WASM-vs-NumPy full-field validation.
+- Browser WASM package build for real browser measurements.
 - Multi-grid and multi-regime correctness logs.
 - Local and CI quality gates:
   - `cargo fmt --check`
@@ -133,7 +134,8 @@ forward solver. The following pieces exist and are measured:
   - `ruff format --check`
   - `ruff check`
   - JavaScript syntax checks
-  - WASM build/check
+  - Node.js and browser WASM builds
+  - Node.js WASM checks
   - Rust/NumPy/WASM validation scripts
 
 Important measured result:
@@ -155,7 +157,20 @@ Current WASM build command:
 
 ```bash
 bash tools/build_wasm_node.sh
+bash tools/build_wasm_web.sh
 ```
+
+Current browser rendering benchmark:
+
+```bash
+python3 -m http.server 8000
+```
+
+Open `http://localhost:8000/www/render_bench.html` after building the browser
+WASM package. The harness records field-to-RGBA conversion, `ImageData`
+construction, `putImageData`, and optional OffscreenCanvas/ImageBitmap timings.
+Real browser results still need to be recorded before the paper can make a
+browser-rendering claim.
 
 ---
 

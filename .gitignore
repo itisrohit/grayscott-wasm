@@ -4,6 +4,7 @@
 # WASM
 /pkg/
 /pkg-node/
+/pkg-web/
 
 # Node.js
 node_modules/
