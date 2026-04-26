@@ -61,6 +61,16 @@ cargo run --release --bin inverse_grad -- \
   --epsilon 0.0001
 ```
 
+Run finite-difference gradient descent:
+
+```bash
+cargo run --release --bin inverse_opt -- \
+  --width 64 --height 64 --steps 100 \
+  --target-feed 0.06055 --target-kill 0.06245 \
+  --initial-feed 0.060 --initial-kill 0.063 \
+  --learning-rate 0.0001 --epsilon 0.0001 --iterations 8
+```
+
 Run the JavaScript scalar forward benchmark:
 
 ```bash

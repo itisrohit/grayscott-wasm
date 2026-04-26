@@ -390,15 +390,51 @@ Observed output:
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | 64x64 | 100 | 0.060550 | 0.062450 | 0.060000 | 0.063000 | 1.0e-4 | 3.761e-5 | 6.972e-2 | 2.088e-1 | 5 |
 
+Finite-difference optimizer command:
+
+```bash
+cargo run --release --bin inverse_opt -- \
+  --width 64 --height 64 --steps 100 \
+  --target-feed 0.06055 --target-kill 0.06245 \
+  --initial-feed 0.060 --initial-kill 0.063 \
+  --learning-rate 0.0001 --epsilon 0.0001 --iterations 8
+```
+
+Observed iteration output:
+
+| Iter | F | k | Loss | dLoss/dF | dLoss/dk |
+|---:|---:|---:|---:|---:|---:|
+| 0 | 0.060000 | 0.063000 | 3.761e-5 | 6.972e-2 | 2.088e-1 |
+| 1 | 0.059993 | 0.062979 | 3.293e-5 | 6.505e-2 | 1.950e-1 |
+| 2 | 0.059987 | 0.062960 | 2.884e-5 | 6.070e-2 | 1.822e-1 |
+| 3 | 0.059980 | 0.062941 | 2.528e-5 | 5.665e-2 | 1.703e-1 |
+| 4 | 0.059975 | 0.062924 | 2.216e-5 | 5.288e-2 | 1.592e-1 |
+| 5 | 0.059969 | 0.062908 | 1.944e-5 | 4.937e-2 | 1.488e-1 |
+| 6 | 0.059965 | 0.062894 | 1.707e-5 | 4.611e-2 | 1.392e-1 |
+| 7 | 0.059960 | 0.062880 | 1.499e-5 | 4.306e-2 | 1.302e-1 |
+| 8 | 0.059956 | 0.062867 | 1.317e-5 | 4.023e-2 | 1.218e-1 |
+
+Observed summary:
+
+| Target F | Target k | Initial loss | Final F | Final k | F abs err | k abs err | Final loss | Evaluated |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 0.060550 | 0.062450 | 3.761e-5 | 0.059956 | 0.062867 | 0.000594 | 0.000417 | 1.317e-5 | 45 |
+
 Interpretation:
 
 - The first inverse baseline correctly recovers the known target when the true
   `F` and `k` values are present in the search grid.
 - Central finite differences provide the first numerical gradient baseline for
   later AD validation.
+- Fixed-step finite-difference gradient descent reduces the pattern loss by about
+  `65%` over 8 iterations for the current off-target guess.
+- The parameter error does not monotonically track the pattern loss in this run:
+  `F` moves farther from the generating value while the field MSE drops. This is
+  important evidence that the inverse problem can be locally ambiguous under a
+  final-pattern MSE objective.
 - This is a sanity baseline, not yet a strong inverse-problem result.
 - Next inverse checks should use more rollout steps, multiple target regimes,
-  noisy targets, gradient descent, and forward-mode AD.
+  noisy targets, and forward-mode AD.
 
 ---
 

@@ -201,6 +201,16 @@ cargo run --release --bin inverse_grad -- \
   --epsilon 0.0001
 ```
 
+Current finite-difference optimizer command:
+
+```bash
+cargo run --release --bin inverse_opt -- \
+  --width 64 --height 64 --steps 100 \
+  --target-feed 0.06055 --target-kill 0.06245 \
+  --initial-feed 0.060 --initial-kill 0.063 \
+  --learning-rate 0.0001 --epsilon 0.0001 --iterations 8
+```
+
 Current inverse result:
 
 - A `64 x 64`, 100-step target with `F = 0.060` and `k = 0.062` is recovered
@@ -210,8 +220,13 @@ Current inverse result:
   errors of `0.00005` for both `F` and `k`.
 - Central finite differences now estimate the loss gradient with respect to `F`
   and `k`; this becomes the comparison target for forward-mode AD.
-- These validate the inverse-recovery harness, but the next step is still an
-  optimizer loop and then forward-mode AD.
+- Fixed-step finite-difference gradient descent reduces pattern loss from
+  `3.761e-5` to `1.317e-5` over 8 iterations from the current off-target guess.
+- The optimizer result also shows that lower pattern loss does not necessarily
+  mean smaller raw parameter distance to the generating parameters, so inverse
+  recovery claims must report both loss and parameter error.
+- These validate the inverse-recovery harness, but the next step is forward-mode
+  AD and gradient comparison.
 
 ---
 

@@ -43,6 +43,38 @@ pub struct FiniteDifferenceGradient {
     pub evaluated: usize,
 }
 
+#[derive(Debug, Clone, Copy)]
+pub struct GradientDescentConfig {
+    pub initial_feed: f32,
+    pub initial_kill: f32,
+    pub feed_min: f32,
+    pub feed_max: f32,
+    pub kill_min: f32,
+    pub kill_max: f32,
+    pub learning_rate: f32,
+    pub epsilon: f32,
+    pub iterations: usize,
+    pub diff_u: f32,
+    pub diff_v: f32,
+    pub dt: f32,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct GradientDescentStep {
+    pub iteration: usize,
+    pub feed: f32,
+    pub kill: f32,
+    pub loss: f64,
+    pub grad_feed: f64,
+    pub grad_kill: f64,
+}
+
+#[derive(Debug, Clone)]
+pub struct GradientDescentResult {
+    pub steps: Vec<GradientDescentStep>,
+    pub evaluated: usize,
+}
+
 impl InverseTarget {
     pub const fn new(
         width: usize,
@@ -197,6 +229,49 @@ pub fn finite_difference_gradient(
     }
 }
 
+pub fn gradient_descent(
+    target: InverseTarget,
+    config: GradientDescentConfig,
+    target_u: &[f32],
+    target_v: &[f32],
+) -> GradientDescentResult {
+    assert!(config.feed_min <= config.feed_max, "invalid feed bounds");
+    assert!(config.kill_min <= config.kill_max, "invalid kill bounds");
+    assert!(config.learning_rate > 0.0, "learning_rate must be positive");
+    assert!(config.epsilon > 0.0, "epsilon must be positive");
+
+    let mut feed = config.initial_feed.clamp(config.feed_min, config.feed_max);
+    let mut kill = config.initial_kill.clamp(config.kill_min, config.kill_max);
+    let mut steps = Vec::with_capacity(config.iterations + 1);
+    let mut evaluated = 0;
+
+    for iteration in 0..=config.iterations {
+        let params = GrayScottParams::new(feed, kill, config.diff_u, config.diff_v, config.dt);
+        let gradient =
+            finite_difference_gradient(target, params, target_u, target_v, config.epsilon);
+        evaluated += gradient.evaluated;
+        steps.push(GradientDescentStep {
+            iteration,
+            feed,
+            kill,
+            loss: gradient.base_loss,
+            grad_feed: gradient.feed,
+            grad_kill: gradient.kill,
+        });
+
+        if iteration == config.iterations {
+            break;
+        }
+
+        feed = (feed - config.learning_rate * gradient.feed as f32)
+            .clamp(config.feed_min, config.feed_max);
+        kill = (kill - config.learning_rate * gradient.kill as f32)
+            .clamp(config.kill_min, config.kill_max);
+    }
+
+    GradientDescentResult { steps, evaluated }
+}
+
 pub fn grid_search(
     target: InverseTarget,
     config: GridSearchConfig,
@@ -287,6 +362,35 @@ mod tests {
         assert!(gradient.feed.abs() > 0.0);
         assert!(gradient.kill.abs() > 0.0);
         assert_eq!(gradient.evaluated, 5);
+    }
+
+    #[test]
+    fn gradient_descent_reduces_loss_from_off_target_guess() {
+        let target_params = GrayScottParams::new(0.06055, 0.06245, 0.16, 0.08, 1.0);
+        let target = InverseTarget::new(32, 32, 100, 5, target_params);
+        let (target_u, target_v) = generate_target(target);
+        let config = GradientDescentConfig {
+            initial_feed: 0.060,
+            initial_kill: 0.063,
+            feed_min: 0.050,
+            feed_max: 0.070,
+            kill_min: 0.055,
+            kill_max: 0.070,
+            learning_rate: 1.0e-4,
+            epsilon: 1.0e-4,
+            iterations: 3,
+            diff_u: 0.16,
+            diff_v: 0.08,
+            dt: 1.0,
+        };
+
+        let result = gradient_descent(target, config, &target_u, &target_v);
+        let first = result.steps.first().expect("missing first step");
+        let last = result.steps.last().expect("missing last step");
+
+        assert_eq!(result.steps.len(), 4);
+        assert_eq!(result.evaluated, 20);
+        assert!(last.loss < first.loss);
     }
 
     #[test]

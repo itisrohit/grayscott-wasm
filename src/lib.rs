@@ -2,8 +2,9 @@ pub mod inverse;
 pub mod solver;
 
 pub use inverse::{
-    finite_difference_gradient, generate_target, grid_search, loss_for_params,
-    FiniteDifferenceGradient, GridSearchConfig, GridSearchResult, InverseTarget,
+    finite_difference_gradient, generate_target, gradient_descent, grid_search, loss_for_params,
+    FiniteDifferenceGradient, GradientDescentConfig, GradientDescentResult, GradientDescentStep,
+    GridSearchConfig, GridSearchResult, InverseTarget,
 };
 pub use solver::{GrayScott, GrayScottParams};
 
