@@ -169,8 +169,12 @@ python3 -m http.server 8000
 Open `http://localhost:8000/www/render_bench.html` after building the browser
 WASM package. The harness records field-to-RGBA conversion, `ImageData`
 construction, `putImageData`, and optional OffscreenCanvas/ImageBitmap timings.
-Real browser results still need to be recorded before the paper can make a
-browser-rendering claim.
+Initial Chrome manual measurements are now recorded in `docs/experiment-log.md`.
+The current result says field-to-RGBA conversion is the dominant render-side cost
+at `512 x 512` (`0.817000 ms/frame` median), while direct `putImageData` is below
+`0.1 ms/frame` in that environment. This is useful but still a single-browser,
+single-machine result, so the paper should qualify any browser-rendering claim
+until another browser or machine is measured.
 
 ---
 

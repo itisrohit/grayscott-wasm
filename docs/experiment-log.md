@@ -259,9 +259,63 @@ Metrics recorded by the page:
 Current result:
 
 - Harness added.
-- Real browser measurements are pending and must be recorded with browser name,
-  version, operating system, grid size, frame count, and user agent before the
-  paper claims browser rendering performance.
+- Manual Chrome measurements recorded for `128 x 128`, `256 x 256`, and
+  `512 x 512`.
+
+Manual browser environment:
+
+- Browser: Chrome `146.0.0.0`
+- OS reported by user agent: `Macintosh; Intel Mac OS X 10_15_7`
+- OffscreenCanvas support: `true`
+- `bitmaprenderer` support: `true`
+- User agent:
+
+```text
+Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+```
+
+Manual benchmark settings:
+
+- Frames: `300`
+- Warmup steps: `250`
+- Runs per grid: `3`
+- Reported value: median ms/frame
+
+Observed median output:
+
+| Grid | Field to RGBA | new ImageData | 2D putImageData | OffscreenCanvas putImageData | OffscreenCanvas ImageBitmap transfer | Checksum |
+|---|---:|---:|---:|---:|---:|---:|
+| 128x128 | 0.084000 | 0.000333 | 0.010667 | 0.009333 | 0.016000 | 92126 |
+| 256x256 | 0.205333 | 0.000000 | 0.027333 | 0.021000 | 0.027000 | 369296 |
+| 512x512 | 0.817000 | 0.000333 | 0.093333 | 0.094333 | 0.099667 | 1475932 |
+
+Raw runs:
+
+| Grid | Run | Field to RGBA | new ImageData | 2D putImageData | OffscreenCanvas putImageData | OffscreenCanvas ImageBitmap transfer |
+|---|---:|---:|---:|---:|---:|---:|
+| 128x128 | 1 | 0.080000 | 0.000667 | 0.010000 | 0.008667 | 0.016333 |
+| 128x128 | 2 | 0.084000 | 0.000333 | 0.010667 | 0.009333 | 0.016000 |
+| 128x128 | 3 | 0.084333 | 0.000333 | 0.011000 | 0.009333 | 0.016000 |
+| 256x256 | 1 | 0.205333 | 0.000000 | 0.028333 | 0.021000 | 0.027000 |
+| 256x256 | 2 | 0.205000 | 0.000667 | 0.025000 | 0.021000 | 0.026667 |
+| 256x256 | 3 | 0.207667 | 0.000000 | 0.027333 | 0.021333 | 0.027000 |
+| 512x512 | 1 | 0.817000 | 0.000333 | 0.090333 | 0.089667 | 0.124667 |
+| 512x512 | 2 | 0.817000 | 0.000000 | 0.093333 | 0.095000 | 0.099667 |
+| 512x512 | 3 | 0.819000 | 0.000667 | 0.096000 | 0.094333 | 0.099667 |
+
+Interpretation:
+
+- Field-to-RGBA conversion dominates the measured rendering-side cost at
+  `512 x 512`, at `0.817000 ms/frame`.
+- `ImageData` construction is negligible in this Chrome run, but the benchmark
+  resolution is coarse enough that values near zero should not be overinterpreted.
+- `putImageData` remains below `0.1 ms/frame` at `512 x 512` for both main-canvas
+  and OffscreenCanvas paths in this environment.
+- OffscreenCanvas/ImageBitmap transfer is supported, but it is not faster than
+  direct `putImageData` in the `512 x 512` median result.
+- These are single-browser, single-machine manual results. Browser-rendering
+  claims should remain qualified until repeated on at least one more browser or
+  machine.
 
 ---
 
