@@ -71,6 +71,18 @@ cargo run --release --bin inverse_noise -- \
   --kill-min 0.055 --kill-max 0.070 --kill-count 31
 ```
 
+Compare grid search with the AD optimizer under noise:
+
+```bash
+cargo run --release --bin inverse_ad_opt -- \
+  --width 64 --height 64 --steps 100 \
+  --noise-levels 0.000,0.020,0.050,0.100 \
+  --seeds 24301,24589,51966,48879 \
+  --iterations 8 --learning-rate 0.0001 \
+  --feed-min 0.045 --feed-max 0.070 --feed-count 51 \
+  --kill-min 0.055 --kill-max 0.070 --kill-count 31
+```
+
 Run the inverse finite-difference gradient baseline:
 
 ```bash

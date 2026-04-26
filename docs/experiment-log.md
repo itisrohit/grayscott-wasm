@@ -610,6 +610,74 @@ Noise interpretation:
 - Next inverse checks should use longer rollouts or compare grid search against
   an AD optimizer under the same noise conditions.
 
+AD optimizer comparison command:
+
+```bash
+cargo run --release --bin inverse_ad_opt -- \
+  --width 64 --height 64 --steps 100 \
+  --noise-levels 0.000,0.020,0.050,0.100 \
+  --seeds 24301,24589,51966,48879 \
+  --iterations 8 --learning-rate 0.0001 \
+  --feed-min 0.045 --feed-max 0.070 --feed-count 51 \
+  --kill-min 0.055 --kill-max 0.070 --kill-count 31
+```
+
+Observed output:
+
+Grid: `64x64`, steps: `100`, AD iterations: `8`, learning rate: `1e-4`
+
+| Noise | Seed | Method | Best/Final F | Best/Final k | F abs err | k abs err | Loss vs noisy target | Loss vs clean target | Evaluated |
+|---:|---:|---|---:|---:|---:|---:|---:|---:|---:|
+| 0.000 | 24301 | grid | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 2.997e-7 | 2.997e-7 | 1581 |
+| 0.000 | 24301 | ad-opt | 0.059956 | 0.062867 | 0.000594 | 0.000417 | 1.318e-5 | 1.318e-5 | 9 |
+| 0.000 | 24589 | grid | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 2.997e-7 | 2.997e-7 | 1581 |
+| 0.000 | 24589 | ad-opt | 0.059956 | 0.062867 | 0.000594 | 0.000417 | 1.318e-5 | 1.318e-5 | 9 |
+| 0.000 | 51966 | grid | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 2.997e-7 | 2.997e-7 | 1581 |
+| 0.000 | 51966 | ad-opt | 0.059956 | 0.062867 | 0.000594 | 0.000417 | 1.318e-5 | 1.318e-5 | 9 |
+| 0.000 | 48879 | grid | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 2.997e-7 | 2.997e-7 | 1581 |
+| 0.000 | 48879 | ad-opt | 0.059956 | 0.062867 | 0.000594 | 0.000417 | 1.318e-5 | 1.318e-5 | 9 |
+| 0.020 | 24301 | grid | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 7.205e-5 | 2.997e-7 | 1581 |
+| 0.020 | 24301 | ad-opt | 0.059955 | 0.062865 | 0.000595 | 0.000415 | 8.521e-5 | 1.294e-5 | 9 |
+| 0.020 | 24589 | grid | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 6.925e-5 | 2.997e-7 | 1581 |
+| 0.020 | 24589 | ad-opt | 0.059956 | 0.062868 | 0.000594 | 0.000418 | 8.193e-5 | 1.329e-5 | 9 |
+| 0.020 | 51966 | grid | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 7.096e-5 | 2.997e-7 | 1581 |
+| 0.020 | 51966 | ad-opt | 0.059955 | 0.062867 | 0.000595 | 0.000417 | 8.371e-5 | 1.316e-5 | 9 |
+| 0.020 | 48879 | grid | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 7.112e-5 | 2.997e-7 | 1581 |
+| 0.020 | 48879 | ad-opt | 0.059956 | 0.062868 | 0.000594 | 0.000418 | 8.367e-5 | 1.341e-5 | 9 |
+| 0.050 | 24301 | grid | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 4.430e-4 | 2.997e-7 | 1581 |
+| 0.050 | 24301 | ad-opt | 0.059954 | 0.062861 | 0.000596 | 0.000411 | 4.566e-4 | 1.244e-5 | 9 |
+| 0.050 | 24589 | grid | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 4.267e-4 | 2.997e-7 | 1581 |
+| 0.050 | 24589 | ad-opt | 0.059955 | 0.062868 | 0.000595 | 0.000418 | 4.392e-4 | 1.331e-5 | 9 |
+| 0.050 | 51966 | grid | 0.059000 | 0.063000 | 0.001550 | 0.000550 | 4.354e-4 | 1.364e-6 | 1581 |
+| 0.050 | 51966 | ad-opt | 0.059954 | 0.062865 | 0.000596 | 0.000415 | 4.487e-4 | 1.296e-5 | 9 |
+| 0.050 | 48879 | grid | 0.059000 | 0.063000 | 0.001550 | 0.000550 | 4.370e-4 | 1.364e-6 | 1581 |
+| 0.050 | 48879 | ad-opt | 0.059956 | 0.062870 | 0.000594 | 0.000420 | 4.493e-4 | 1.359e-5 | 9 |
+| 0.100 | 24301 | grid | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 1.758e-3 | 2.997e-7 | 1581 |
+| 0.100 | 24301 | ad-opt | 0.059951 | 0.062853 | 0.000599 | 0.000403 | 1.773e-3 | 1.134e-5 | 9 |
+| 0.100 | 24589 | grid | 0.059000 | 0.063000 | 0.001550 | 0.000550 | 1.686e-3 | 1.364e-6 | 1581 |
+| 0.100 | 24589 | ad-opt | 0.059953 | 0.062864 | 0.000597 | 0.000414 | 1.700e-3 | 1.278e-5 | 9 |
+| 0.100 | 51966 | grid | 0.057000 | 0.063500 | 0.003550 | 0.001050 | 1.727e-3 | 7.231e-6 | 1581 |
+| 0.100 | 51966 | ad-opt | 0.059952 | 0.062861 | 0.000598 | 0.000411 | 1.744e-3 | 1.236e-5 | 9 |
+| 0.100 | 48879 | grid | 0.059000 | 0.063000 | 0.001550 | 0.000550 | 1.732e-3 | 1.364e-6 | 1581 |
+| 0.100 | 48879 | ad-opt | 0.059955 | 0.062870 | 0.000595 | 0.000420 | 1.745e-3 | 1.354e-5 | 9 |
+
+AD optimizer interpretation:
+
+- The fixed-step AD optimizer uses only `9` primal-equivalent evaluations per
+  run, versus `1581` candidates for the dense grid search.
+- With this conservative learning rate and `8` updates, the AD optimizer is
+  stable across all tested noise seeds but does not beat the grid baseline on
+  clean or noisy loss.
+- At higher noise (`0.050` and `0.100`), the AD optimizer stays near the same
+  final parameter pair while grid search sometimes moves to a lower noisy-loss
+  candidate that is farther from the generating parameters. This is useful
+  evidence that lower noisy-target MSE is not always the same as better
+  parameter recovery.
+- The next optimizer improvement should be an optimization-method change
+  rather than low-level AD-array tuning: add backtracking line search or a small
+  multi-start AD descent, then compare evaluation count, noisy loss, clean loss,
+  and parameter error.
+
 ---
 
 ## Next Validation Upgrade

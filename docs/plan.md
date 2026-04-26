@@ -207,6 +207,18 @@ cargo run --release --bin inverse_noise -- \
   --kill-min 0.055 --kill-max 0.070 --kill-count 31
 ```
 
+Current grid-search vs AD-optimizer command:
+
+```bash
+cargo run --release --bin inverse_ad_opt -- \
+  --width 64 --height 64 --steps 100 \
+  --noise-levels 0.000,0.020,0.050,0.100 \
+  --seeds 24301,24589,51966,48879 \
+  --iterations 8 --learning-rate 0.0001 \
+  --feed-min 0.045 --feed-max 0.070 --feed-count 51 \
+  --kill-min 0.055 --kill-max 0.070 --kill-count 31
+```
+
 This is a baseline, not the final differentiable method. It gives the paper a
 clear recovery target that finite-difference gradients and forward-mode AD must
 match or improve.
@@ -295,9 +307,13 @@ Current inverse result:
 - The optimizer result also shows that lower pattern loss does not necessarily
   mean smaller raw parameter distance to the generating parameters, so inverse
   recovery claims must report both loss and parameter error.
-- These validate the inverse-recovery harness, but the next step is longer-rollout
-  inverse recovery or comparing grid search against an AD optimizer under the
-  same noise conditions.
+- A fixed-step AD optimizer now runs against the same noise cases. It uses only
+  `9` evaluations per case versus `1581` grid candidates, stays stable across
+  the tested seeds, but does not yet beat dense grid search on clean/noisy loss.
+  This makes optimizer mechanics, not AD storage layout, the next best target.
+- These validate the inverse-recovery harness, but the next step is improving
+  the AD optimizer with backtracking line search or a small multi-start strategy
+  before making broader inverse-recovery claims.
 
 ---
 
