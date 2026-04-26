@@ -549,9 +549,41 @@ Multi-regime interpretation:
 - This is still an unnoised, same-initial-condition recovery task. The next
   defensibility step is noise sensitivity or longer rollouts.
 
+Noise-sensitivity command:
+
+```bash
+cargo run --release --bin inverse_noise -- \
+  --width 64 --height 64 --steps 100 \
+  --noise-levels 0.000,0.001,0.005,0.010 \
+  --feed-min 0.045 --feed-max 0.070 --feed-count 51 \
+  --kill-min 0.055 --kill-max 0.070 --kill-count 31
+```
+
+Observed output:
+
+Grid: `64x64`, steps: `100`, seed: `24301`
+
+| Noise amplitude | Best F | Best k | F abs err | k abs err | Loss vs noisy target | Loss vs clean target | Evaluated |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 0.000 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 2.997e-7 | 2.997e-7 | 1581 |
+| 0.001 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 4.927e-7 | 2.997e-7 | 1581 |
+| 0.005 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 4.894e-6 | 2.997e-7 | 1581 |
+| 0.010 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 1.840e-5 | 2.997e-7 | 1581 |
+
+Noise interpretation:
+
+- For this target, grid, rollout length, search range, and deterministic seed,
+  the recovered grid candidate is unchanged through uniform noise amplitude
+  `0.010`.
+- Loss against the noisy target increases with noise, while loss against the
+  clean target remains fixed because the recovered candidate remains fixed.
+- This is mild synthetic noise only. The paper should not generalize this to
+  arbitrary observational noise until multiple seeds and stronger noise levels
+  are measured.
+
 - This is a sanity baseline, not yet a strong inverse-problem result.
-- Next inverse checks should use more rollout steps, multiple target regimes,
-  noisy targets, and forward-mode AD.
+- Next inverse checks should use multiple noise seeds, stronger noise levels, or
+  longer rollouts.
 
 ---
 

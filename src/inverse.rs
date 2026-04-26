@@ -123,6 +123,19 @@ pub fn generate_target(target: InverseTarget) -> (Vec<f32>, Vec<f32>) {
     (sim.u().to_vec(), sim.v().to_vec())
 }
 
+pub fn add_uniform_noise(values: &mut [f32], amplitude: f32, seed: u64) {
+    assert!(amplitude >= 0.0, "amplitude must be non-negative");
+    if amplitude == 0.0 {
+        return;
+    }
+
+    let mut rng = SplitMix64::new(seed);
+    for value in values {
+        let noise = (rng.next_f32() * 2.0 - 1.0) * amplitude;
+        *value = (*value + noise).clamp(0.0, 1.0);
+    }
+}
+
 pub fn field_mse(actual_u: &[f32], actual_v: &[f32], target_u: &[f32], target_v: &[f32]) -> f64 {
     assert_eq!(
         actual_u.len(),
@@ -542,6 +555,30 @@ fn step_dual(
     }
 }
 
+#[derive(Debug, Clone, Copy)]
+struct SplitMix64 {
+    state: u64,
+}
+
+impl SplitMix64 {
+    const fn new(seed: u64) -> Self {
+        Self { state: seed }
+    }
+
+    fn next_u64(&mut self) -> u64 {
+        self.state = self.state.wrapping_add(0x9e37_79b9_7f4a_7c15);
+        let mut z = self.state;
+        z = (z ^ (z >> 30)).wrapping_mul(0xbf58_476d_1ce4_e5b9);
+        z = (z ^ (z >> 27)).wrapping_mul(0x94d0_49bb_1331_11eb);
+        z ^ (z >> 31)
+    }
+
+    fn next_f32(&mut self) -> f32 {
+        let value = self.next_u64() >> 40;
+        value as f32 / 16_777_216.0
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -551,6 +588,19 @@ mod tests {
         let u = [1.0, 0.5, 0.25];
         let v = [0.0, 0.25, 0.5];
         assert_eq!(field_mse(&u, &v, &u, &v), 0.0);
+    }
+
+    #[test]
+    fn add_uniform_noise_is_deterministic_and_clamped() {
+        let mut first = [0.0, 0.5, 1.0];
+        let mut second = [0.0, 0.5, 1.0];
+
+        add_uniform_noise(&mut first, 0.1, 42);
+        add_uniform_noise(&mut second, 0.1, 42);
+
+        assert_eq!(first, second);
+        assert!(first.iter().all(|value| (0.0..=1.0).contains(value)));
+        assert_ne!(first, [0.0, 0.5, 1.0]);
     }
 
     #[test]
