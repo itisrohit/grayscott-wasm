@@ -224,6 +224,20 @@ Current result:
   the current benchmark.
 - Views must be recreated if WASM memory grows.
 
+Renderer-facing benchmark direction:
+
+- Browser `ImageData.data` uses a `Uint8ClampedArray` in RGBA order.
+- `ImageData` is available in Web Workers, so a worker can convert simulation
+  fields to pixel buffers before handing rendering work to the main thread or an
+  offscreen canvas path.
+- Benchmark the conversion from `Float32Array` field view to reusable
+  `Uint8ClampedArray` pixel buffer before building UI.
+
+Source:
+
+- MDN `ImageData.data`:
+  https://developer.mozilla.org/en-US/docs/Web/API/ImageData/data
+
 Sources:
 
 - Rust/WASM book interface guidance:

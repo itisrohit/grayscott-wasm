@@ -832,12 +832,12 @@ native benchmarks, JS benchmark, scalar WASM benchmark, and quality gates exist.
 
 Immediate next task:
 
-1. Add a renderer-facing grayscale conversion benchmark:
-   - `Float32Array` field view to `Uint8ClampedArray` pixels,
-   - optional color map,
-   - fixed render sizes.
-2. Then implement WASM SIMD as a separate interior-cell kernel and validate it
+1. Implement WASM SIMD as a separate interior-cell kernel and validate it
    against scalar WASM.
+2. Add browser rendering measurements for:
+   - `ImageData` construction,
+   - `putImageData`,
+   - OffscreenCanvas/Web Worker path if used.
 
 Only after scalar-vs-SIMD correctness and speed are measured should AD/inverse
 recovery begin.

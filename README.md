@@ -62,6 +62,7 @@ node tools/bench_forward_wasm.mjs --grids 128,256,512 --steps 500 --trials 5
 .venv/bin/python tools/wasm_full_field_metrics.py --width 64 --height 64 --steps 100 500 1000
 node tools/bench_wasm_boundary.mjs --grids 64,128,256 --steps 500 --trials 7
 node tools/bench_wasm_views.mjs --grids 128,256,512 --trials 1000
+node tools/bench_grayscale_render.mjs --grids 128,256,512 --trials 200
 ```
 
 Check all JavaScript files:

@@ -558,6 +558,41 @@ Interpretation:
 
 ---
 
+## Grayscale Render Buffer Benchmark
+
+Command:
+
+```bash
+node tools/bench_grayscale_render.mjs --grids 128,256,512 --trials 1000
+```
+
+Method:
+
+- Uses `WasmGrayScott.u_view()` as the source field.
+- Converts the `Float32Array` field view into an RGBA `Uint8ClampedArray` pixel
+  buffer, matching the data layout expected by browser `ImageData`.
+- Compares reusing a pixel buffer against allocating a fresh pixel buffer each
+  frame.
+
+Observed output:
+
+| Grid | Cells | Trials | Reuse buffer ms/frame | Allocate buffer ms/frame | Allocation overhead | Reuse checksum | Allocate checksum |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 128x128 | 16384 | 1000 | 0.054530 | 0.056977 | 1.04x | 16320000 | 16320000 |
+| 256x256 | 65536 | 1000 | 0.206754 | 0.213902 | 1.03x | 16320000 | 16320000 |
+| 512x512 | 262144 | 1000 | 0.828732 | 0.848691 | 1.02x | 16320000 | 16320000 |
+
+Interpretation:
+
+- Field-to-RGBA conversion is linear in cell count and remains under `1 ms/frame`
+  at `512 x 512` in Node.js.
+- Reusing a pixel buffer is slightly faster, but allocation overhead is small in
+  this benchmark.
+- Browser rendering still needs to measure `ImageData` construction and
+  `putImageData`/OffscreenCanvas costs separately.
+
+---
+
 ## Multi-Regime Full-Field Validation
 
 Commands:
