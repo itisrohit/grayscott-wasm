@@ -10,6 +10,7 @@ use grayscott_wasm::{
 struct Args {
     width: usize,
     height: usize,
+    grids: Vec<usize>,
     steps: usize,
     trials: usize,
     radius: usize,
@@ -25,6 +26,7 @@ struct Args {
 
 #[derive(Debug)]
 struct BenchRow {
+    grid: usize,
     name: &'static str,
     evaluated: usize,
     median_ms: f64,
@@ -39,6 +41,7 @@ impl Default for Args {
         Self {
             width: 64,
             height: 64,
+            grids: Vec::new(),
             steps: 100,
             trials: 7,
             radius: 5,
@@ -56,6 +59,22 @@ impl Default for Args {
 
 fn main() {
     let args = Args::parse(std::env::args().skip(1));
+    let grids = args.grids();
+
+    println!("Steps: {}, trials: {}", args.steps, args.trials);
+    println!();
+    println!(
+        "| Grid | Method | Solver evaluations | Median ms | Min ms | Max ms | Overhead vs primal | Checksum |"
+    );
+    println!("|---|---|---:|---:|---:|---:|---:|---:|");
+
+    for grid in grids {
+        let rows = run_grid(&args, grid);
+        print_markdown(&rows);
+    }
+}
+
+fn run_grid(args: &Args, grid: usize) -> [BenchRow; 3] {
     let target_params = GrayScottParams::new(
         args.target_feed,
         args.target_kill,
@@ -70,35 +89,28 @@ fn main() {
         args.diff_v,
         args.dt,
     );
-    let target = InverseTarget::new(
-        args.width,
-        args.height,
-        args.steps,
-        args.radius,
-        target_params,
-    );
+    let target = InverseTarget::new(grid, grid, args.steps, args.radius, target_params);
     let (target_u, target_v) = generate_target(target);
 
-    let primal = bench(&args, "Primal loss", 1, || {
+    let primal = bench(args, grid, "Primal loss", 1, || {
         loss_for_params(target, guess_params, &target_u, &target_v)
     });
-    let finite = bench(&args, "Finite difference gradient", 5, || {
+    let finite = bench(args, grid, "Finite difference gradient", 5, || {
         let gradient =
             finite_difference_gradient(target, guess_params, &target_u, &target_v, args.epsilon);
         gradient.base_loss + gradient.feed + gradient.kill
     });
-    let forward = bench(&args, "Forward-mode AD gradient", 1, || {
+    let forward = bench(args, grid, "Forward-mode AD gradient", 1, || {
         let gradient = forward_gradient(target, guess_params, &target_u, &target_v);
         gradient.loss + gradient.feed + gradient.kill
     });
 
     let primal_median = primal.median_ms;
-    let rows = [
+    [
         primal.with_overhead(primal_median),
         finite.with_overhead(primal_median),
         forward.with_overhead(primal_median),
-    ];
-    print_markdown(&args, &rows);
+    ]
 }
 
 impl Args {
@@ -114,6 +126,12 @@ impl Args {
             match flag.as_str() {
                 "--width" => args.width = value.parse().expect("invalid --width"),
                 "--height" => args.height = value.parse().expect("invalid --height"),
+                "--grids" => {
+                    args.grids = value
+                        .split(',')
+                        .map(|part| part.parse().expect("invalid --grids value"))
+                        .collect();
+                }
                 "--steps" => args.steps = value.parse().expect("invalid --steps"),
                 "--trials" => args.trials = value.parse().expect("invalid --trials"),
                 "--radius" => args.radius = value.parse().expect("invalid --radius"),
@@ -130,10 +148,26 @@ impl Args {
         }
         assert!(args.width > 0, "--width must be non-zero");
         assert!(args.height > 0, "--height must be non-zero");
+        assert!(
+            args.grids.iter().all(|&grid| grid > 0),
+            "--grids values must be non-zero"
+        );
         assert!(args.steps > 0, "--steps must be non-zero");
         assert!(args.trials > 0, "--trials must be non-zero");
         assert!(args.epsilon > 0.0, "--epsilon must be positive");
         args
+    }
+
+    fn grids(&self) -> Vec<usize> {
+        if self.grids.is_empty() {
+            assert_eq!(
+                self.width, self.height,
+                "--width and --height must match when --grids is omitted"
+            );
+            vec![self.width]
+        } else {
+            self.grids.clone()
+        }
     }
 }
 
@@ -144,7 +178,7 @@ impl BenchRow {
     }
 }
 
-fn bench<F>(args: &Args, name: &'static str, evaluated: usize, mut run: F) -> BenchRow
+fn bench<F>(args: &Args, grid: usize, name: &'static str, evaluated: usize, mut run: F) -> BenchRow
 where
     F: FnMut() -> f64,
 {
@@ -161,6 +195,7 @@ where
     }
 
     BenchRow {
+        grid,
         name,
         evaluated,
         median_ms: median(&mut durations),
@@ -185,19 +220,11 @@ fn median(values: &mut [f64]) -> f64 {
     }
 }
 
-fn print_markdown(args: &Args, rows: &[BenchRow]) {
-    println!(
-        "Grid: {}x{}, steps: {}, trials: {}",
-        args.width, args.height, args.steps, args.trials
-    );
-    println!();
-    println!(
-        "| Method | Solver evaluations | Median ms | Min ms | Max ms | Overhead vs primal | Checksum |"
-    );
-    println!("|---|---:|---:|---:|---:|---:|---:|");
+fn print_markdown(rows: &[BenchRow]) {
     for row in rows {
         println!(
-            "| {} | {} | {:.6} | {:.6} | {:.6} | {:.2}x | {:.6e} |",
+            "| {0}x{0} | {1} | {2} | {3:.6} | {4:.6} | {5:.6} | {6:.2}x | {7:.6e} |",
+            row.grid,
             row.name,
             row.evaluated,
             row.median_ms,

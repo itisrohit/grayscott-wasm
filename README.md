@@ -85,7 +85,7 @@ Benchmark inverse-gradient overhead:
 
 ```bash
 cargo run --release --bin bench_inverse -- \
-  --width 64 --height 64 --steps 100 --trials 7 \
+  --grids 64,128,256 --steps 100 --trials 7 \
   --target-feed 0.06055 --target-kill 0.06245 \
   --guess-feed 0.060 --guess-kill 0.063 \
   --epsilon 0.0001

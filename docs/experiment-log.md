@@ -440,7 +440,7 @@ Inverse-gradient overhead benchmark command:
 
 ```bash
 cargo run --release --bin bench_inverse -- \
-  --width 64 --height 64 --steps 100 --trials 7 \
+  --grids 64,128,256 --steps 100 --trials 7 \
   --target-feed 0.06055 --target-kill 0.06245 \
   --guess-feed 0.060 --guess-kill 0.063 \
   --epsilon 0.0001
@@ -448,13 +448,19 @@ cargo run --release --bin bench_inverse -- \
 
 Observed output:
 
-Grid: `64x64`, steps: `100`, trials: `7`
+Steps: `100`, trials: `7`
 
-| Method | Solver evaluations | Median ms | Min ms | Max ms | Overhead vs primal | Checksum |
-|---|---:|---:|---:|---:|---:|---:|
-| Primal loss | 1 | 2.146708 | 1.190459 | 3.385834 | 1.00x | 3.761030e-5 |
-| Finite difference gradient | 5 | 7.579333 | 6.390458 | 10.527417 | 3.53x | 2.785345e-1 |
-| Forward-mode AD gradient | 1 | 3.002334 | 2.953125 | 3.107542 | 1.40x | 2.784426e-1 |
+| Grid | Method | Solver evaluations | Median ms | Min ms | Max ms | Overhead vs primal | Checksum |
+|---|---|---:|---:|---:|---:|---:|---:|
+| 64x64 | Primal loss | 1 | 1.211084 | 1.150709 | 3.372833 | 1.00x | 3.761030e-5 |
+| 64x64 | Finite difference gradient | 5 | 8.038334 | 6.444708 | 10.129084 | 6.64x | 2.785345e-1 |
+| 64x64 | Forward-mode AD gradient | 1 | 3.104250 | 2.979708 | 3.166250 | 2.56x | 2.784426e-1 |
+| 128x128 | Primal loss | 1 | 4.461959 | 4.457625 | 4.490792 | 1.00x | 9.402576e-6 |
+| 128x128 | Finite difference gradient | 5 | 22.402792 | 22.300083 | 22.496000 | 5.02x | 6.963363e-2 |
+| 128x128 | Forward-mode AD gradient | 1 | 11.727291 | 11.686917 | 11.900125 | 2.63x | 6.961064e-2 |
+| 256x256 | Primal loss | 1 | 17.696542 | 17.668708 | 17.798208 | 1.00x | 2.350644e-6 |
+| 256x256 | Finite difference gradient | 5 | 88.669084 | 88.534542 | 89.565542 | 5.01x | 1.740841e-2 |
+| 256x256 | Forward-mode AD gradient | 1 | 46.746291 | 46.679792 | 46.873083 | 2.64x | 1.740266e-2 |
 
 Interpretation:
 
@@ -467,8 +473,9 @@ Interpretation:
 - Forward-mode AD matches the finite-difference gradient closely on the same
   case, with relative deltas below `4e-4`.
 - Forward-mode AD is substantially cheaper than central finite differences in
-  the first native overhead benchmark: `1.40x` primal cost vs `3.53x` primal
-  cost for finite differences.
+  the native overhead benchmark. At `128x128` and `256x256`, finite differences
+  are about `5.0x` primal cost, while forward-mode AD is about `2.6x` primal
+  cost.
 - The parameter error does not monotonically track the pattern loss in this run:
   `F` moves farther from the generating value while the field MSE drops. This is
   important evidence that the inverse problem can be locally ambiguous under a
