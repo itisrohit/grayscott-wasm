@@ -561,29 +561,54 @@ cargo run --release --bin inverse_noise -- \
 
 Observed output:
 
-Grid: `64x64`, steps: `100`, seed: `24301`
+Grid: `64x64`, steps: `100`
 
-| Noise amplitude | Best F | Best k | F abs err | k abs err | Loss vs noisy target | Loss vs clean target | Evaluated |
-|---:|---:|---:|---:|---:|---:|---:|---:|
-| 0.000 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 2.997e-7 | 2.997e-7 | 1581 |
-| 0.001 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 4.927e-7 | 2.997e-7 | 1581 |
-| 0.005 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 4.894e-6 | 2.997e-7 | 1581 |
-| 0.010 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 1.840e-5 | 2.997e-7 | 1581 |
+| Noise amplitude | Seed | Best F | Best k | F abs err | k abs err | Loss vs noisy target | Loss vs clean target | Evaluated |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 0.000 | 24301 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 2.997e-7 | 2.997e-7 | 1581 |
+| 0.000 | 24589 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 2.997e-7 | 2.997e-7 | 1581 |
+| 0.000 | 51966 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 2.997e-7 | 2.997e-7 | 1581 |
+| 0.000 | 48879 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 2.997e-7 | 2.997e-7 | 1581 |
+| 0.001 | 24301 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 4.927e-7 | 2.997e-7 | 1581 |
+| 0.001 | 24589 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 4.793e-7 | 2.997e-7 | 1581 |
+| 0.001 | 51966 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 4.859e-7 | 2.997e-7 | 1581 |
+| 0.001 | 48879 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 4.815e-7 | 2.997e-7 | 1581 |
+| 0.005 | 24301 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 4.894e-6 | 2.997e-7 | 1581 |
+| 0.005 | 24589 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 4.702e-6 | 2.997e-7 | 1581 |
+| 0.005 | 51966 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 4.820e-6 | 2.997e-7 | 1581 |
+| 0.005 | 48879 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 4.799e-6 | 2.997e-7 | 1581 |
+| 0.010 | 24301 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 1.840e-5 | 2.997e-7 | 1581 |
+| 0.010 | 24589 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 1.771e-5 | 2.997e-7 | 1581 |
+| 0.010 | 51966 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 1.815e-5 | 2.997e-7 | 1581 |
+| 0.010 | 48879 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 1.816e-5 | 2.997e-7 | 1581 |
+| 0.020 | 24301 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 7.205e-5 | 2.997e-7 | 1581 |
+| 0.020 | 24589 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 6.925e-5 | 2.997e-7 | 1581 |
+| 0.020 | 51966 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 7.096e-5 | 2.997e-7 | 1581 |
+| 0.020 | 48879 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 7.112e-5 | 2.997e-7 | 1581 |
+| 0.050 | 24301 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 4.430e-4 | 2.997e-7 | 1581 |
+| 0.050 | 24589 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 4.267e-4 | 2.997e-7 | 1581 |
+| 0.050 | 51966 | 0.059000 | 0.063000 | 0.001550 | 0.000550 | 4.354e-4 | 1.364e-6 | 1581 |
+| 0.050 | 48879 | 0.059000 | 0.063000 | 0.001550 | 0.000550 | 4.370e-4 | 1.364e-6 | 1581 |
+| 0.100 | 24301 | 0.060500 | 0.062500 | 0.000050 | 0.000050 | 1.758e-3 | 2.997e-7 | 1581 |
+| 0.100 | 24589 | 0.059000 | 0.063000 | 0.001550 | 0.000550 | 1.686e-3 | 1.364e-6 | 1581 |
+| 0.100 | 51966 | 0.057000 | 0.063500 | 0.003550 | 0.001050 | 1.727e-3 | 7.231e-6 | 1581 |
+| 0.100 | 48879 | 0.059000 | 0.063000 | 0.001550 | 0.000550 | 1.732e-3 | 1.364e-6 | 1581 |
 
 Noise interpretation:
 
-- For this target, grid, rollout length, search range, and deterministic seed,
-  the recovered grid candidate is unchanged through uniform noise amplitude
-  `0.010`.
-- Loss against the noisy target increases with noise, while loss against the
-  clean target remains fixed because the recovered candidate remains fixed.
-- This is mild synthetic noise only. The paper should not generalize this to
-  arbitrary observational noise until multiple seeds and stronger noise levels
-  are measured.
+- Across four deterministic seeds, the recovered grid candidate is stable through
+  noise amplitude `0.020`.
+- Recovery begins to degrade at noise amplitude `0.050`: two of four seeds move
+  to `F = 0.059000`, `k = 0.063000`.
+- At noise amplitude `0.100`, three of four seeds move away from the clean
+  candidate, with one seed reaching `F` error `0.003550`.
+- This gives a concrete failure boundary for this target, grid, rollout length,
+  search range, and synthetic independent uniform field-noise model: stable
+  through `0.020`, mixed failure by `0.050`, clearer degradation by `0.100`.
 
 - This is a sanity baseline, not yet a strong inverse-problem result.
-- Next inverse checks should use multiple noise seeds, stronger noise levels, or
-  longer rollouts.
+- Next inverse checks should use longer rollouts or compare grid search against
+  an AD optimizer under the same noise conditions.
 
 ---
 

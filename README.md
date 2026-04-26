@@ -65,7 +65,8 @@ Run inverse recovery under deterministic target noise:
 ```bash
 cargo run --release --bin inverse_noise -- \
   --width 64 --height 64 --steps 100 \
-  --noise-levels 0.000,0.001,0.005,0.010 \
+  --noise-levels 0.000,0.001,0.005,0.010,0.020,0.050,0.100 \
+  --seeds 24301,24589,51966,48879 \
   --feed-min 0.045 --feed-max 0.070 --feed-count 51 \
   --kill-min 0.055 --kill-max 0.070 --kill-count 31
 ```

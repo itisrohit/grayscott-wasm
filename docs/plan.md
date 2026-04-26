@@ -201,7 +201,8 @@ Current noise-sensitivity command:
 ```bash
 cargo run --release --bin inverse_noise -- \
   --width 64 --height 64 --steps 100 \
-  --noise-levels 0.000,0.001,0.005,0.010 \
+  --noise-levels 0.000,0.001,0.005,0.010,0.020,0.050,0.100 \
+  --seeds 24301,24589,51966,48879 \
   --feed-min 0.045 --feed-max 0.070 --feed-count 51 \
   --kill-min 0.055 --kill-max 0.070 --kill-count 31
 ```
@@ -267,9 +268,9 @@ Current inverse result:
   regimes, but the lower-feed case has larger `F` error (`0.000750`) despite low
   field loss. This supports the existing caution that inverse recovery should be
   reported with both field loss and parameter error.
-- A deterministic noise sweep on the default off-grid target keeps the same
-  recovered candidate through uniform noise amplitude `0.010`; this is useful
-  mild-noise evidence, not a broad robustness claim.
+- A four-seed deterministic noise sweep on the default off-grid target keeps the
+  same recovered candidate through uniform noise amplitude `0.020`, starts mixed
+  failures at `0.050`, and shows clearer degradation at `0.100`.
 - Central finite differences now estimate the loss gradient with respect to `F`
   and `k`; this becomes the comparison target for forward-mode AD.
 - Fixed-step finite-difference gradient descent reduces pattern loss from
@@ -294,8 +295,9 @@ Current inverse result:
 - The optimizer result also shows that lower pattern loss does not necessarily
   mean smaller raw parameter distance to the generating parameters, so inverse
   recovery claims must report both loss and parameter error.
-- These validate the inverse-recovery harness, but the next step is multiple
-  noise seeds, stronger noise levels, or longer-rollout inverse recovery.
+- These validate the inverse-recovery harness, but the next step is longer-rollout
+  inverse recovery or comparing grid search against an AD optimizer under the
+  same noise conditions.
 
 ---
 

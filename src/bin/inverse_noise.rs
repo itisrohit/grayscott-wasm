@@ -12,7 +12,7 @@ struct Args {
     target_feed: f32,
     target_kill: f32,
     noise_levels: Vec<f32>,
-    seed: u64,
+    seeds: Vec<u64>,
     feed_min: f32,
     feed_max: f32,
     feed_count: usize,
@@ -33,8 +33,8 @@ impl Default for Args {
             radius: 5,
             target_feed: 0.06055,
             target_kill: 0.06245,
-            noise_levels: vec![0.0, 0.001, 0.005, 0.010],
-            seed: 0x5eed,
+            noise_levels: vec![0.0, 0.001, 0.005, 0.010, 0.020, 0.050, 0.100],
+            seeds: vec![0x5eed, 0x600d, 0xcafe, 0xbeef],
             feed_min: 0.045,
             feed_max: 0.070,
             feed_count: 51,
@@ -72,42 +72,45 @@ fn main() {
     let (clean_u, clean_v) = generate_target(target);
 
     println!(
-        "Grid: {}x{}, steps: {}, seed: {}",
-        args.width, args.height, args.steps, args.seed
+        "Grid: {}x{}, steps: {}",
+        args.width, args.height, args.steps
     );
     println!();
     println!(
-        "| Noise amplitude | Best F | Best k | F abs err | k abs err | Loss vs noisy target | Loss vs clean target | Evaluated |"
+        "| Noise amplitude | Seed | Best F | Best k | F abs err | k abs err | Loss vs noisy target | Loss vs clean target | Evaluated |"
     );
-    println!("|---:|---:|---:|---:|---:|---:|---:|---:|");
+    println!("|---:|---:|---:|---:|---:|---:|---:|---:|---:|");
 
     for &noise in &args.noise_levels {
-        let mut noisy_u = clean_u.clone();
-        let mut noisy_v = clean_v.clone();
-        add_uniform_noise(&mut noisy_u, noise, args.seed);
-        add_uniform_noise(&mut noisy_v, noise, args.seed ^ 0xa5a5_a5a5_a5a5_a5a5);
+        for &seed in &args.seeds {
+            let mut noisy_u = clean_u.clone();
+            let mut noisy_v = clean_v.clone();
+            add_uniform_noise(&mut noisy_u, noise, seed);
+            add_uniform_noise(&mut noisy_v, noise, seed ^ 0xa5a5_a5a5_a5a5_a5a5);
 
-        let result = grid_search(target, config, &noisy_u, &noisy_v);
-        let recovered = GrayScottParams::new(
-            result.best_feed,
-            result.best_kill,
-            args.diff_u,
-            args.diff_v,
-            args.dt,
-        );
-        let clean_loss = grayscott_wasm::loss_for_params(target, recovered, &clean_u, &clean_v);
+            let result = grid_search(target, config, &noisy_u, &noisy_v);
+            let recovered = GrayScottParams::new(
+                result.best_feed,
+                result.best_kill,
+                args.diff_u,
+                args.diff_v,
+                args.dt,
+            );
+            let clean_loss = grayscott_wasm::loss_for_params(target, recovered, &clean_u, &clean_v);
 
-        println!(
-            "| {:.3} | {:.6} | {:.6} | {:.6} | {:.6} | {:.3e} | {:.3e} | {} |",
-            noise,
-            result.best_feed,
-            result.best_kill,
-            (result.best_feed - args.target_feed).abs(),
-            (result.best_kill - args.target_kill).abs(),
-            result.best_loss,
-            clean_loss,
-            result.evaluated
-        );
+            println!(
+                "| {:.3} | {} | {:.6} | {:.6} | {:.6} | {:.6} | {:.3e} | {:.3e} | {} |",
+                noise,
+                seed,
+                result.best_feed,
+                result.best_kill,
+                (result.best_feed - args.target_feed).abs(),
+                (result.best_kill - args.target_kill).abs(),
+                result.best_loss,
+                clean_loss,
+                result.evaluated
+            );
+        }
     }
 }
 
@@ -134,7 +137,13 @@ impl Args {
                         .map(|part| part.parse().expect("invalid --noise-levels value"))
                         .collect();
                 }
-                "--seed" => args.seed = value.parse().expect("invalid --seed"),
+                "--seed" => args.seeds = vec![value.parse().expect("invalid --seed")],
+                "--seeds" => {
+                    args.seeds = value
+                        .split(',')
+                        .map(|part| part.parse().expect("invalid --seeds value"))
+                        .collect();
+                }
                 "--feed-min" => args.feed_min = value.parse().expect("invalid --feed-min"),
                 "--feed-max" => args.feed_max = value.parse().expect("invalid --feed-max"),
                 "--feed-count" => args.feed_count = value.parse().expect("invalid --feed-count"),
@@ -155,6 +164,7 @@ impl Args {
             args.noise_levels.iter().all(|&noise| noise >= 0.0),
             "--noise-levels must be non-negative"
         );
+        assert!(!args.seeds.is_empty(), "--seeds must not be empty");
         assert!(args.feed_count > 0, "--feed-count must be non-zero");
         assert!(args.kill_count > 0, "--kill-count must be non-zero");
         assert!(args.feed_min <= args.feed_max, "invalid feed bounds");
