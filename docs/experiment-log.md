@@ -90,10 +90,10 @@ Why two Python tolerances:
 
 Future correctness metrics to add:
 
-- MAE over full `u` field
-- MAE over full `v` field
-- RMSE over full fields
-- Max absolute error
+- MAE over full `u` field: added for `64 x 64`
+- MAE over full `v` field: added for `64 x 64`
+- RMSE over full fields: added for `64 x 64`
+- Max absolute error: added for `64 x 64`
 - Pattern similarity metric, optional
 
 ---
@@ -204,10 +204,11 @@ Passed:
 - Rust scalar summary matches NumPy `float32` reference within `1e-6`.
 - Rust scalar summary matches dependency-free Python scalar reference within
   `1e-5`.
+- Full-field Rust scalar output matches NumPy `float32` reference closely for
+  `64 x 64` at `100`, `500`, and `1000` steps.
 
 Not yet done:
 
-- Full-field Rust vs NumPy MAE/RMSE/max-error comparison.
 - Multi-grid validation: `128 x 128`, `256 x 256`, `512 x 512`.
 - Multi-step validation: `100`, `500`, `1000`.
 - Multiple parameter regimes.
@@ -223,18 +224,32 @@ Not yet done:
 
 ## Next Validation Upgrade
 
-The next correctness milestone should compare full fields, not only summary stats.
+The first full-field correctness milestone now compares full fields, not only
+summary stats.
 
-Required output:
+Command:
+
+```bash
+.venv/bin/python tools/full_field_metrics.py --width 64 --height 64 --steps 100 500 1000
+```
+
+Observed output:
 
 | Grid | Steps | Regime | u_MAE | v_MAE | u_RMSE | v_RMSE | u_MaxErr | v_MaxErr |
 |---|---:|---|---:|---:|---:|---:|---:|---:|
-| 64x64 | 100 | F=0.060, k=0.062 | TBD | TBD | TBD | TBD | TBD | TBD |
-| 64x64 | 500 | F=0.060, k=0.062 | TBD | TBD | TBD | TBD | TBD | TBD |
-| 64x64 | 1000 | F=0.060, k=0.062 | TBD | TBD | TBD | TBD | TBD | TBD |
+| 64x64 | 100 | F=0.060, k=0.062 | 2.184e-08 | 2.080e-09 | 4.181e-08 | 1.401e-08 | 2.384e-07 | 1.937e-07 |
+| 64x64 | 500 | F=0.060, k=0.062 | 3.744e-08 | 1.014e-08 | 6.996e-08 | 3.951e-08 | 5.364e-07 | 3.725e-07 |
+| 64x64 | 1000 | F=0.060, k=0.062 | 4.238e-08 | 1.755e-08 | 8.347e-08 | 5.602e-08 | 5.960e-07 | 5.364e-07 |
 
 Implementation note:
 
-- Export Rust final fields to a binary or `.npy`-compatible format.
-- Compare against NumPy final fields directly.
-- Keep identical initial conditions and `float32` references.
+- Rust final fields are exported as little-endian raw `f32` arrays by
+  `examples/export_fields.rs`.
+- NumPy loads those arrays as `dtype="<f4"` and compares against the reference
+  solver directly.
+- Initial conditions and parameters are identical.
+
+Next upgrade:
+
+- Repeat full-field metrics for `128 x 128`, `256 x 256`, and `512 x 512`.
+- Add at least three more parameter regimes.

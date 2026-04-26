@@ -20,6 +20,7 @@ cargo test
 cargo run --example summary
 .venv/bin/python tools/compare_scalar_reference.py
 .venv/bin/python tools/compare_numpy_reference.py
+.venv/bin/python tools/full_field_metrics.py --width 64 --height 64 --steps 100 500 1000
 ```
 
 Run the NumPy reference directly:
