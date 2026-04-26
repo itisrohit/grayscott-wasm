@@ -35,6 +35,12 @@ Run the full local quality gate:
 bash tools/quality.sh
 ```
 
+Run the native scalar forward benchmark:
+
+```bash
+cargo run --release --bin bench_forward -- --grids 128,256,512 --steps 500 --trials 5
+```
+
 Run the same gate through pre-commit:
 
 ```bash

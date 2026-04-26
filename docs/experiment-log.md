@@ -292,6 +292,52 @@ Next validation upgrade:
 
 ---
 
+## Native Forward Benchmark Method
+
+Command:
+
+```bash
+cargo run --release --bin bench_forward -- --grids 128,256,512 --steps 500 --trials 5
+```
+
+Benchmark method:
+
+- Native Rust scalar solver only.
+- Release build.
+- Grids: `128 x 128`, `256 x 256`, `512 x 512`.
+- Steps per trial: `500`.
+- Trials per grid: `5`.
+- Warmup: `25` steps before timed trials.
+- Initial condition: same centered square seed used in correctness tests.
+- Metrics:
+  - median milliseconds per step,
+  - min milliseconds per step,
+  - max milliseconds per step,
+  - median steps per second,
+  - cell updates per second,
+  - checksum of final `u` and `v` fields.
+
+The checksum is reported to make sure the benchmark performs the simulation work
+and to catch accidental behavioral changes.
+
+Observed output:
+
+| Grid | Steps | Trials | Median ms/step | Min ms/step | Max ms/step | Median steps/s | Cells/s | Checksum |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| 128x128 | 500 | 5 | 0.050298 | 0.044711 | 0.070395 | 19881.67 | 3.257e8 | 16282.767486 |
+| 256x256 | 500 | 5 | 0.176637 | 0.176153 | 0.176960 | 5661.33 | 3.710e8 | 65434.767486 |
+| 512x512 | 500 | 5 | 0.707058 | 0.703682 | 0.710550 | 1414.31 | 3.708e8 | 262042.767486 |
+
+Interpretation:
+
+- Throughput is roughly flat around `3.7e8` cell updates/s for `256 x 256` and
+  `512 x 512`.
+- The `128 x 128` case has more timing noise because each step is very short.
+- This is only the native scalar Rust baseline. It is not yet a JavaScript, WASM,
+  or SIMD comparison.
+
+---
+
 ## Multi-Regime Full-Field Validation
 
 Commands:
