@@ -462,6 +462,30 @@ Steps: `100`, trials: `7`
 | 256x256 | Finite difference gradient | 5 | 88.669084 | 88.534542 | 89.565542 | 5.01x | 1.740841e-2 |
 | 256x256 | Forward-mode AD gradient | 1 | 46.746291 | 46.679792 | 46.873083 | 2.64x | 1.740266e-2 |
 
+Criterion statistical benchmark command:
+
+```bash
+cargo bench --bench inverse_overhead -- --sample-size 10 --warm-up-time 0.5 --measurement-time 1
+```
+
+Criterion output:
+
+| Grid | Method | Estimated time |
+|---|---|---:|
+| 128x128 | Primal loss | `[4.5437 ms, 4.5589 ms]` |
+| 128x128 | Finite difference gradient | `[22.732 ms, 22.796 ms]` |
+| 128x128 | Forward-mode AD gradient | `[12.017 ms, 12.104 ms]` |
+| 256x256 | Primal loss | `[18.100 ms, 18.157 ms]` |
+| 256x256 | Finite difference gradient | `[90.332 ms, 90.433 ms]` |
+| 256x256 | Forward-mode AD gradient | `[47.893 ms, 48.048 ms]` |
+
+Criterion-derived overhead:
+
+| Grid | Finite difference vs primal | Forward-mode AD vs primal | AD vs finite difference |
+|---|---:|---:|---:|
+| 128x128 | `~5.0x` | `~2.65x` | `~1.9x` cheaper |
+| 256x256 | `~5.0x` | `~2.65x` | `~1.9x` cheaper |
+
 Interpretation:
 
 - The first inverse baseline correctly recovers the known target when the true
@@ -476,6 +500,9 @@ Interpretation:
   the native overhead benchmark. At `128x128` and `256x256`, finite differences
   are about `5.0x` primal cost, while forward-mode AD is about `2.6x` primal
   cost.
+- Criterion confirms the larger-grid overhead story with tight timing intervals:
+  finite differences are about `5.0x` primal cost and forward-mode AD is about
+  `2.65x`, making AD roughly `1.9x` cheaper per two-parameter gradient query.
 - Do not treat the `64x64` overhead ratio as stable. The sub-millisecond-to-low
   millisecond timings are sensitive to local timing noise, and an earlier
   `64x64` run reported a lower AD overhead. The defensible overhead conclusion

@@ -13,7 +13,6 @@ crate-type = ["cdylib", "rlib"]
 codegen-units = 1
 lto = true
 opt-level = 3
-panic = "abort"
 
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = false
@@ -21,3 +20,10 @@ wasm-opt = false
 [dependencies]
 js-sys = "0.3"
 wasm-bindgen = "0.2"
+
+[dev-dependencies]
+criterion = "0.8"
+
+[[bench]]
+name = "inverse_overhead"
+harness = false

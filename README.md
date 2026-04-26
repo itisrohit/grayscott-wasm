@@ -100,6 +100,12 @@ cargo run --release --bin bench_inverse -- \
   --epsilon 0.0001
 ```
 
+Run Criterion statistical benchmarks for inverse-gradient overhead:
+
+```bash
+cargo bench --bench inverse_overhead
+```
+
 Run the JavaScript scalar forward benchmark:
 
 ```bash

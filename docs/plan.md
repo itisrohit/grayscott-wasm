@@ -240,6 +240,12 @@ cargo run --release --bin bench_inverse -- \
   --epsilon 0.0001
 ```
 
+Current statistical timing command:
+
+```bash
+cargo bench --bench inverse_overhead
+```
+
 Current inverse result:
 
 - A `64 x 64`, 100-step target with `F = 0.060` and `k = 0.062` is recovered
@@ -264,6 +270,10 @@ Current inverse result:
   scale is noisy. The defensible Experiment 4 claim is the larger-grid result:
   forward-mode AD is roughly `2x` cheaper than finite differences per
   two-parameter gradient query.
+- Criterion is now the preferred timing harness for this overhead result because
+  it applies warmup, repeated sampling, outlier handling, and confidence
+  intervals. The `bench_inverse` binary remains useful only as a fast rough
+  check.
 - The `2.6x` AD overhead is likely dominated partly by memory traffic/cache
   pressure from carrying value plus two derivatives per field cell, not just
   arithmetic. This belongs in the discussion and motivates adjoint/reverse-mode
