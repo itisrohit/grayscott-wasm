@@ -1308,6 +1308,59 @@ Interpretation:
 
 ---
 
+## Automated Headless Chrome Browser Inverse Benchmark
+
+Server command:
+
+```bash
+python3 -m http.server 8000
+```
+
+Benchmark command:
+
+```bash
+node tools/run_browser_inverse_bench.mjs --grid 64 --steps 100 --iterations 8
+```
+
+The script launches local Chrome through the DevTools protocol, opens
+`www/inverse.html?autorun=1`, waits for the optimizer table and status JSON, and
+prints the result. The elapsed time starts after WASM initialization and covers
+the exported inverse optimizer call plus JavaScript JSON parse/update work.
+
+Environment:
+
+```text
+Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/147.0.0.0 Safari/537.36
+```
+
+Settings:
+
+- Steps: `100`
+- Iterations: `8`
+- Target: `F=0.06055`, `k=0.06245`
+- Initial: `F=0.06000`, `k=0.06300`
+- Noise: `0`
+- Seed: `24301`
+
+Measured results:
+
+| Grid | Evaluations | History rows | Elapsed ms | ms/iteration | ms/evaluation | Final clean loss | \|F error\| | \|k error\| |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 32x32 | 21 | 9 | 20.100000 | 2.233333 | 0.957143 | 6.884e-7 | 0.000648502 | 0.000220701 |
+| 64x64 | 17 | 9 | 68.100000 | 7.566667 | 4.005882 | 1.740e-7 | 0.000656150 | 0.000220858 |
+| 96x96 | 17 | 9 | 141.600000 | 15.733333 | 8.329412 | 1.737e-7 | 0.000649724 | 0.000246741 |
+
+Interpretation:
+
+- The full inverse loop now runs from a browser page without Python or native
+  helper code in the user-facing path.
+- Runtime scales with grid size as expected for the repeated forward solves
+  inside the AD-line optimizer.
+- These are headless Chrome timings. Use them as repeatable local engineering
+  evidence, not as final cross-browser performance claims.
+
+---
+
 ## Quality Gate
 
 Local quality command:

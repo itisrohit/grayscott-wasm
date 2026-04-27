@@ -202,6 +202,12 @@ Then open:
 http://localhost:8000/www/inverse.html
 ```
 
+Run the browser inverse recovery page through local headless Chrome:
+
+```bash
+node tools/run_browser_inverse_bench.mjs --grid 64 --steps 100 --iterations 8
+```
+
 Check all JavaScript files:
 
 ```bash

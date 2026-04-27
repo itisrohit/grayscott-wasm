@@ -198,6 +198,19 @@ Then open:
 http://localhost:8000/www/inverse.html
 ```
 
+Automated local headless Chrome inverse benchmark:
+
+```bash
+node tools/run_browser_inverse_bench.mjs --grid 64 --steps 100 --iterations 8
+```
+
+Current browser inverse result:
+
+- In HeadlessChrome 147, the browser page completes the `64 x 64`, 100-step,
+  8-iteration AD-line recovery in `68.1 ms` after WASM initialization.
+- The measured cost is `7.57 ms/iteration` and `4.01 ms/evaluation` for the
+  default target and initial point.
+
 Current browser rendering benchmark:
 
 ```bash
@@ -1059,12 +1072,12 @@ forward-mode AD, inverse recovery, noise sensitivity, and paper draft all exist.
 
 Immediate next task:
 
-1. Commit the browser inverse recovery page and WASM export after the quality
-   gate passes.
-2. Measure browser inverse runtime per optimizer iteration using the new browser
-   page.
-3. Move the browser inverse loop into a Web Worker if larger grids or longer
+1. Commit the browser inverse timing runner and experiment-log table after the
+   quality gate passes.
+2. Move the browser inverse loop into a Web Worker if larger grids or longer
    inverse runs block the UI.
+3. Update the paper with the post-`paper-draft-v1` SIMD, automated browser
+   render, and browser inverse results.
 
 Future work after browser inverse:
 

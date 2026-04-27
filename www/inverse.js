@@ -7,6 +7,8 @@ const finalFeed = document.querySelector("#final-feed");
 const finalKill = document.querySelector("#final-kill");
 const cleanLoss = document.querySelector("#clean-loss");
 const evaluated = document.querySelector("#evaluated");
+const elapsedMs = document.querySelector("#elapsed-ms");
+const msPerEval = document.querySelector("#ms-per-eval");
 
 let wasmReady = false;
 
@@ -31,11 +33,39 @@ function writeStatus(value) {
     typeof value === "string" ? value : JSON.stringify(value, null, 2);
 }
 
+function applyQuerySettings() {
+  const params = new URLSearchParams(window.location.search);
+  const controls = new Map([
+    ["grid", "#grid"],
+    ["steps", "#steps"],
+    ["target_feed", "#target-feed"],
+    ["target_kill", "#target-kill"],
+    ["initial_feed", "#initial-feed"],
+    ["initial_kill", "#initial-kill"],
+    ["iterations", "#iterations"],
+    ["learning_rate", "#learning-rate"],
+    ["noise", "#noise"],
+    ["seed", "#seed"],
+  ]);
+
+  for (const [name, selector] of controls) {
+    const value = params.get(name);
+    const input = document.querySelector(selector);
+    if (value && input) {
+      input.value = value;
+    }
+  }
+
+  return params.get("autorun") === "1";
+}
+
 function setSummary(result) {
   finalFeed.textContent = formatFixed(result.final_feed);
   finalKill.textContent = formatFixed(result.final_kill);
   cleanLoss.textContent = formatExp(result.final_loss_clean);
   evaluated.textContent = String(result.evaluated);
+  elapsedMs.textContent = formatFixed(result.elapsed_ms);
+  msPerEval.textContent = formatFixed(result.ms_per_evaluation);
 }
 
 function setHistory(steps) {
@@ -70,6 +100,7 @@ async function runInverse() {
     }
 
     const grid = inputNumber("#grid");
+    const start = performance.now();
     const result = JSON.parse(
       inverse_ad_line_json(
         grid,
@@ -86,6 +117,10 @@ async function runInverse() {
         inputNumber("#seed"),
       ),
     );
+    const elapsed = performance.now() - start;
+    result.elapsed_ms = elapsed;
+    result.ms_per_iteration = elapsed / Math.max(1, result.steps_history.length);
+    result.ms_per_evaluation = elapsed / Math.max(1, result.evaluated);
 
     setSummary(result);
     setHistory(result.steps_history);
@@ -99,6 +134,9 @@ async function runInverse() {
       feed_abs_error: result.feed_abs_error,
       kill_abs_error: result.kill_abs_error,
       evaluated: result.evaluated,
+      elapsed_ms: result.elapsed_ms,
+      ms_per_iteration: result.ms_per_iteration,
+      ms_per_evaluation: result.ms_per_evaluation,
       user_agent: navigator.userAgent,
     });
   } catch (error) {
@@ -115,8 +153,16 @@ runButton.addEventListener("click", () => {
   });
 });
 
+const shouldAutorun = applyQuerySettings();
+
 writeStatus({
   ready: true,
   page: "browser inverse recovery",
   user_agent: navigator.userAgent,
 });
+
+if (shouldAutorun) {
+  runInverse().catch((error) => {
+    console.error(error);
+  });
+}
