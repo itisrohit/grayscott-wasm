@@ -1259,6 +1259,55 @@ Interpretation:
 
 ---
 
+## Automated Headless Chrome Render Benchmark
+
+Server command:
+
+```bash
+python3 -m http.server 8000
+```
+
+Benchmark command:
+
+```bash
+node tools/run_browser_render_bench.mjs --grid 512 --frames 300 --steps 250
+```
+
+The script launches local Chrome through the DevTools protocol, opens
+`www/render_bench.html?autorun=1`, waits for the page to finish, and prints the
+same metrics as the manual page. This is useful for repeatable local checks, but
+it is still a headless Chrome measurement. Treat manual interactive browser runs
+as the stronger evidence for user-facing rendering behavior.
+
+Environment:
+
+```text
+Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/147.0.0.0 Safari/537.36
+```
+
+Settings:
+
+- Frames: `300`
+- Warmup steps: `250`
+
+Measured results:
+
+| Grid | Field to RGBA | new ImageData | 2D putImageData | OffscreenCanvas putImageData | OffscreenCanvas ImageBitmap transfer | Checksum |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 128x128 | 0.050000 | 0.000333 | 0.002333 | 0.002000 | 0.006667 | 92126 |
+| 256x256 | 0.191667 | 0.000667 | 0.006000 | 0.006333 | 0.016000 | 369296 |
+| 512x512 | 0.777667 | 0.000333 | 0.023333 | 0.022667 | 0.120000 | 1475932 |
+
+Interpretation:
+
+- The field-to-RGBA conversion remains the dominant browser-side render cost.
+- The checksums match the earlier manual Chrome run for all three grid sizes.
+- Headless Chrome reports lower direct `putImageData` cost than the earlier
+  interactive Chrome run, so do not merge the two tables as if they were the
+  same browser environment.
+
+---
+
 ## Quality Gate
 
 Local quality command:

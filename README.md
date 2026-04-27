@@ -183,6 +183,12 @@ Then open:
 http://localhost:8000/www/render_bench.html
 ```
 
+Run the same browser render benchmark through local headless Chrome:
+
+```bash
+node tools/run_browser_render_bench.mjs --grid 512 --frames 300 --steps 250
+```
+
 Run the browser inverse recovery page:
 
 ```bash

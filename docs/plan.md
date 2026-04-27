@@ -214,6 +214,17 @@ at `512 x 512` (`0.817000 ms/frame` median), while direct `putImageData` is belo
 single-machine result, so the paper should qualify any browser-rendering claim
 until another browser or machine is measured.
 
+Automated local headless Chrome render benchmark:
+
+```bash
+node tools/run_browser_render_bench.mjs --grid 512 --frames 300 --steps 250
+```
+
+A second local HeadlessChrome 147 pass produced matching checksums and
+`0.777667 ms/frame` field-to-RGBA at `512 x 512`. Headless Chrome reported lower
+`putImageData` costs than the earlier interactive run, so keep those tables
+separate.
+
 Current inverse baseline command:
 
 ```bash
@@ -1050,14 +1061,13 @@ Immediate next task:
 
 1. Commit the browser inverse recovery page and WASM export after the quality
    gate passes.
-2. Collect a second real-browser render benchmark on the same manual protocol
-   used for the first Chrome run.
+2. Measure browser inverse runtime per optimizer iteration using the new browser
+   page.
 3. Move the browser inverse loop into a Web Worker if larger grids or longer
    inverse runs block the UI.
 
 Future work after browser inverse:
 
 - repeat browser render measurements across more browsers and machines,
-- measure browser inverse runtime per optimizer iteration,
 - update the paper with the post-`paper-draft-v1` SIMD and browser-inverse
   results.

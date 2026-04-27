@@ -43,6 +43,25 @@ function writeStatus(value) {
     typeof value === "string" ? value : JSON.stringify(value, null, 2);
 }
 
+function applyQuerySettings() {
+  const params = new URLSearchParams(window.location.search);
+  const grid = params.get("grid");
+  const frames = params.get("frames");
+  const steps = params.get("steps");
+
+  if (grid && [...gridInput.options].some((option) => option.value === grid)) {
+    gridInput.value = grid;
+  }
+  if (frames) {
+    framesInput.value = frames;
+  }
+  if (steps) {
+    stepsInput.value = steps;
+  }
+
+  return params.get("autorun") === "1";
+}
+
 function fillPixels(field, pixels) {
   for (let i = 0, j = 0; i < field.length; i += 1, j += 4) {
     const v = Math.max(0, Math.min(255, Math.round((1 - field[i]) * 255)));
@@ -194,9 +213,17 @@ runButton.addEventListener("click", () => {
   });
 });
 
+const shouldAutorun = applyQuerySettings();
+
 writeStatus({
   ready: true,
   offscreen_canvas: "OffscreenCanvas" in window,
   bitmap_renderer: Boolean(bitmapContext),
   user_agent: navigator.userAgent,
 });
+
+if (shouldAutorun) {
+  runBenchmark().catch((error) => {
+    console.error(error);
+  });
+}
