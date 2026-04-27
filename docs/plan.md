@@ -122,8 +122,9 @@ Current paper status:
 - Figures live in `paper/figures/`.
 - A compiled Overleaf PDF has been added locally at
   `paper/grayscott_wasm_IEEE_Journal_Paper.pdf`.
-- The current paper scope is scalar Rust/WASM plus forward-mode AD. SIMD is
-  explicitly future work, not a current contribution.
+- The tagged paper scope is scalar Rust/WASM plus forward-mode AD. SIMD was added
+  after `paper-draft-v1` and is now a next-paper/update result, not part of the
+  current compiled PDF.
 - The repository URL is included in the paper:
   `https://github.com/itisrohit/grayscott-wasm`.
 
@@ -135,6 +136,7 @@ forward solver. The following pieces exist and are measured:
 - NumPy `float32` reference.
 - Node.js scalar JavaScript benchmark.
 - Node.js scalar WASM benchmark via `wasm-pack`.
+- Node.js WASM SIMD build, scalar-vs-SIMD validation, and SIMD benchmark.
 - Rust-vs-NumPy full-field validation.
 - WASM-vs-NumPy full-field validation.
 - Browser WASM package build for real browser measurements.
@@ -156,8 +158,10 @@ Important measured result:
 - Scalar WASM is only about `1.22x-1.27x` faster than scalar JavaScript in the
   current Node.js benchmark.
 - Native Rust is still about `1.31x-1.49x` faster than scalar WASM.
-- Therefore, the paper does not claim a large scalar WASM speedup. SIMD
-  acceleration of the Laplacian kernel is left to future work.
+- A separate WASM SIMD entrypoint now validates against scalar output with
+  max field deltas below `8e-7` in the first SIMD check.
+- In the SIMD-enabled Node.js package, the SIMD entrypoint is `6.98x-8.57x`
+  faster than scalar `run` for `128x128` through `512x512` at 500 steps.
 
 Current quality command:
 
@@ -170,6 +174,14 @@ Current WASM build command:
 ```bash
 bash tools/build_wasm_node.sh
 bash tools/build_wasm_web.sh
+```
+
+Current WASM SIMD build and benchmark commands:
+
+```bash
+bash tools/build_wasm_node_simd.sh
+node tools/check_wasm_simd.mjs
+node tools/bench_forward_wasm_simd.mjs --grids 128,256,512 --steps 500 --trials 5
 ```
 
 Current browser rendering benchmark:
@@ -1020,15 +1032,13 @@ forward-mode AD, inverse recovery, noise sensitivity, and paper draft all exist.
 
 Immediate next task:
 
-1. Decide whether to commit the compiled PDF
-   `paper/grayscott_wasm_IEEE_Journal_Paper.pdf`.
-2. Create a reproducibility tag after the PDF and plan update are committed, for
-   example `paper-draft-v1`.
-3. Use that tag when referencing the artifact in submissions or preprints.
+1. Finish documenting and quality-checking the WASM SIMD implementation.
+2. Commit the SIMD kernel, validation script, benchmark script, and experiment log.
+3. Move next to the browser inverse loop.
 
-Future work, not a blocker for this paper:
+Future work after SIMD:
 
-- implement a separate WASM SIMD Laplacian kernel,
-- validate scalar/SIMD parity,
-- measure scalar-vs-SIMD speedup,
-- repeat browser measurements across more browsers and machines.
+- expose AD-line inverse recovery in the browser UI,
+- repeat browser render measurements across more browsers and machines,
+- update the paper with the post-`paper-draft-v1` SIMD and browser-inverse
+  results.

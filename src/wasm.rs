@@ -50,6 +50,14 @@ impl WasmGrayScott {
         self.inner.run(steps, self.params);
     }
 
+    pub fn run_simd(&mut self, steps: usize) {
+        self.inner.run_simd(steps, self.params);
+    }
+
+    pub fn simd_enabled(&self) -> bool {
+        cfg!(all(target_arch = "wasm32", target_feature = "simd128"))
+    }
+
     pub fn checksum(&self) -> f64 {
         self.inner
             .u()

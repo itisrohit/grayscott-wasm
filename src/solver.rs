@@ -143,34 +143,25 @@ impl GrayScott {
         let height = self.height;
 
         for y in 0..height {
-            let y_up = if y == 0 { height - 1 } else { y - 1 };
-            let y_down = if y + 1 == height { 0 } else { y + 1 };
-
             for x in 0..width {
-                let x_left = if x == 0 { width - 1 } else { x - 1 };
-                let x_right = if x + 1 == width { 0 } else { x + 1 };
-
-                let center = y * width + x;
-                let left = y * width + x_left;
-                let right = y * width + x_right;
-                let up = y_up * width + x;
-                let down = y_down * width + x;
-
-                let u = self.u[center];
-                let v = self.v[center];
-                let lap_u = self.u[left] + self.u[right] + self.u[up] + self.u[down] - 4.0 * u;
-                let lap_v = self.v[left] + self.v[right] + self.v[up] + self.v[down] - 4.0 * v;
-                let uvv = u * v * v;
-
-                self.next_u[center] =
-                    u + params.dt * (params.diff_u * lap_u - uvv + params.feed * (1.0 - u));
-                self.next_v[center] =
-                    v + params.dt * (params.diff_v * lap_v + uvv - (params.feed + params.kill) * v);
+                self.update_cell_scalar(x, y, params);
             }
         }
 
         core::mem::swap(&mut self.u, &mut self.next_u);
         core::mem::swap(&mut self.v, &mut self.next_v);
+    }
+
+    pub fn step_simd(&mut self, params: GrayScottParams) {
+        #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
+        unsafe {
+            self.step_wasm_simd(params);
+        }
+
+        #[cfg(not(all(target_arch = "wasm32", target_feature = "simd128")))]
+        {
+            self.step(params);
+        }
     }
 
     pub fn run(&mut self, steps: usize, params: GrayScottParams) {
@@ -179,9 +170,137 @@ impl GrayScott {
         }
     }
 
+    pub fn run_simd(&mut self, steps: usize, params: GrayScottParams) {
+        for _ in 0..steps {
+            self.step_simd(params);
+        }
+    }
+
     #[inline]
     const fn idx(&self, x: usize, y: usize) -> usize {
         y * self.width + x
+    }
+
+    #[inline]
+    fn update_cell_scalar(&mut self, x: usize, y: usize, params: GrayScottParams) {
+        let y_up = if y == 0 { self.height - 1 } else { y - 1 };
+        let y_down = if y + 1 == self.height { 0 } else { y + 1 };
+        let x_left = if x == 0 { self.width - 1 } else { x - 1 };
+        let x_right = if x + 1 == self.width { 0 } else { x + 1 };
+
+        let center = y * self.width + x;
+        let left = y * self.width + x_left;
+        let right = y * self.width + x_right;
+        let up = y_up * self.width + x;
+        let down = y_down * self.width + x;
+
+        let u = self.u[center];
+        let v = self.v[center];
+        let lap_u = self.u[left] + self.u[right] + self.u[up] + self.u[down] - 4.0 * u;
+        let lap_v = self.v[left] + self.v[right] + self.v[up] + self.v[down] - 4.0 * v;
+        let uvv = u * v * v;
+
+        self.next_u[center] =
+            u + params.dt * (params.diff_u * lap_u - uvv + params.feed * (1.0 - u));
+        self.next_v[center] =
+            v + params.dt * (params.diff_v * lap_v + uvv - (params.feed + params.kill) * v);
+    }
+
+    #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
+    #[target_feature(enable = "simd128")]
+    unsafe fn step_wasm_simd(&mut self, params: GrayScottParams) {
+        use core::arch::wasm32::{
+            f32x4_add, f32x4_mul, f32x4_splat, f32x4_sub, v128_load, v128_store,
+        };
+
+        let width = self.width;
+        let height = self.height;
+        if width < 6 || height < 3 {
+            self.step(params);
+            return;
+        }
+
+        for x in 0..width {
+            self.update_cell_scalar(x, 0, params);
+            self.update_cell_scalar(x, height - 1, params);
+        }
+        for y in 1..height - 1 {
+            self.update_cell_scalar(0, y, params);
+            self.update_cell_scalar(width - 1, y, params);
+        }
+
+        let four = f32x4_splat(4.0);
+        let one = f32x4_splat(1.0);
+        let dt = f32x4_splat(params.dt);
+        let feed = f32x4_splat(params.feed);
+        let feed_plus_kill = f32x4_splat(params.feed + params.kill);
+        let diff_u = f32x4_splat(params.diff_u);
+        let diff_v = f32x4_splat(params.diff_v);
+
+        for y in 1..height - 1 {
+            let row = y * width;
+            let up_row = (y - 1) * width;
+            let down_row = (y + 1) * width;
+            let mut x = 1;
+
+            while x + 3 < width - 1 {
+                let center = row + x;
+                let u = v128_load(self.u.as_ptr().add(center).cast());
+                let v = v128_load(self.v.as_ptr().add(center).cast());
+
+                let u_left = v128_load(self.u.as_ptr().add(center - 1).cast());
+                let u_right = v128_load(self.u.as_ptr().add(center + 1).cast());
+                let u_up = v128_load(self.u.as_ptr().add(up_row + x).cast());
+                let u_down = v128_load(self.u.as_ptr().add(down_row + x).cast());
+                let v_left = v128_load(self.v.as_ptr().add(center - 1).cast());
+                let v_right = v128_load(self.v.as_ptr().add(center + 1).cast());
+                let v_up = v128_load(self.v.as_ptr().add(up_row + x).cast());
+                let v_down = v128_load(self.v.as_ptr().add(down_row + x).cast());
+
+                let lap_u = f32x4_sub(
+                    f32x4_add(f32x4_add(u_left, u_right), f32x4_add(u_up, u_down)),
+                    f32x4_mul(four, u),
+                );
+                let lap_v = f32x4_sub(
+                    f32x4_add(f32x4_add(v_left, v_right), f32x4_add(v_up, v_down)),
+                    f32x4_mul(four, v),
+                );
+                let uvv = f32x4_mul(f32x4_mul(u, v), v);
+
+                let next_u = f32x4_add(
+                    u,
+                    f32x4_mul(
+                        dt,
+                        f32x4_add(
+                            f32x4_sub(f32x4_mul(diff_u, lap_u), uvv),
+                            f32x4_mul(feed, f32x4_sub(one, u)),
+                        ),
+                    ),
+                );
+                let next_v = f32x4_add(
+                    v,
+                    f32x4_mul(
+                        dt,
+                        f32x4_sub(
+                            f32x4_add(f32x4_mul(diff_v, lap_v), uvv),
+                            f32x4_mul(feed_plus_kill, v),
+                        ),
+                    ),
+                );
+
+                v128_store(self.next_u.as_mut_ptr().add(center).cast(), next_u);
+                v128_store(self.next_v.as_mut_ptr().add(center).cast(), next_v);
+                x += 4;
+            }
+
+            while x < width - 1 {
+                self.update_cell_scalar(x, y, params);
+                x += 1;
+            }
+        }
+
+        core::mem::swap(&mut self.u, &mut self.next_u);
+        core::mem::swap(&mut self.v, &mut self.next_v);
     }
 }
 
@@ -244,5 +363,20 @@ mod tests {
 
         assert!(sim.u().iter().all(|value| value.is_finite()));
         assert!(sim.v().iter().all(|value| value.is_finite()));
+    }
+
+    #[test]
+    fn simd_entrypoint_matches_scalar_entrypoint_on_non_simd_targets() {
+        let params = GrayScottParams::default();
+        let mut scalar = GrayScott::new(32, 32);
+        let mut simd = GrayScott::new(32, 32);
+        scalar.seed_square(16, 16, 5);
+        simd.seed_square(16, 16, 5);
+
+        scalar.run(25, params);
+        simd.run_simd(25, params);
+
+        assert_eq!(scalar.u(), simd.u());
+        assert_eq!(scalar.v(), simd.v());
     }
 }

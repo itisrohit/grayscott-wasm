@@ -162,6 +162,14 @@ node tools/bench_wasm_views.mjs --grids 128,256,512 --trials 1000
 node tools/bench_grayscale_render.mjs --grids 128,256,512 --trials 200
 ```
 
+Build, validate, and benchmark the Node.js WASM SIMD package:
+
+```bash
+bash tools/build_wasm_node_simd.sh
+node tools/check_wasm_simd.mjs
+node tools/bench_forward_wasm_simd.mjs --grids 128,256,512 --steps 500 --trials 5
+```
+
 Run the browser render benchmark:
 
 ```bash

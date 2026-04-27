@@ -1151,6 +1151,55 @@ Interpretation:
 
 ---
 
+## WASM SIMD Forward Kernel
+
+Build command:
+
+```bash
+bash tools/build_wasm_node_simd.sh
+```
+
+Validation command:
+
+```bash
+node tools/check_wasm_simd.mjs
+```
+
+Observed validation output:
+
+```text
+WASM SIMD matches scalar: uMax=7.153e-7, vMax=5.364e-7, checksumDelta=5.173e-5
+```
+
+Benchmark command:
+
+```bash
+node tools/bench_forward_wasm_simd.mjs --grids 128,256,512 --steps 500 --trials 5
+```
+
+Observed benchmark output:
+
+| Grid | Steps | Trials | Scalar ms/step | SIMD ms/step | SIMD speedup | Scalar checksum | SIMD checksum |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 128x128 | 500 | 5 | 0.119010 | 0.016002 | 7.44x | 16282.767486 | 16282.767459 |
+| 256x256 | 500 | 5 | 0.473616 | 0.055237 | 8.57x | 65434.767486 | 65434.767459 |
+| 512x512 | 500 | 5 | 1.910463 | 0.273835 | 6.98x | 262042.767486 | 262042.767459 |
+
+Interpretation:
+
+- The SIMD path is a separate WebAssembly `simd128` build and entrypoint
+  (`run_simd`), leaving the existing scalar `run` path intact.
+- The SIMD kernel computes interior rows with 4-wide `f32x4` operations and keeps
+  boundary cells scalar to preserve periodic-boundary behavior.
+- Scalar-vs-SIMD field agreement is within single-precision tolerance for this
+  benchmark. The checksum difference is small relative to the full-field sum and
+  comes from the different floating-point operation ordering in SIMD lanes.
+- In the SIMD-enabled Node.js package, `run_simd` is roughly `7x-8.6x` faster
+  than the scalar `run` path for the tested grids.
+- These are Node.js WebAssembly measurements, not browser measurements yet.
+
+---
+
 ## Quality Gate
 
 Local quality command:
