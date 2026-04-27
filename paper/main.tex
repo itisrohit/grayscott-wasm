@@ -39,7 +39,10 @@ parameters. The system combines a scalar explicit solver with forward-mode
 automatic differentiation and an Armijo backtracking optimizer. On the
 two-parameter inverse task, forward-mode gradients cost about \(2.6\times\) a
 primal loss evaluation on production-relevant native grids, compared with about
-\(5.0\times\) for central finite differences. The backtracking AD optimizer
+\(5.0\times\) for central finite differences. A separate WebAssembly SIMD
+forward kernel gives \(7.0\times\)--\(8.6\times\) speedup over scalar
+WebAssembly in Node.js while matching scalar fields within single-precision
+tolerance. The backtracking AD optimizer
 reaches lower clean field loss than a dense grid search while using 17
 evaluations rather than 1581 candidates. Noise sweeps show stable grid recovery
 through uniform noise amplitude 0.020 and degradation by 0.050--0.100. These
@@ -76,9 +79,13 @@ The contributions are:
   scalar Python and NumPy \texttt{float32} references;
   \item a browser render benchmark separating field-to-RGBA conversion,
   \texttt{ImageData}, \texttt{putImageData}, and OffscreenCanvas costs;
+  \item a separate WebAssembly SIMD forward kernel validated against the scalar
+  WebAssembly path;
   \item a forward-mode AD implementation for two-parameter inverse recovery;
   \item an empirical comparison of dense grid search, finite differences, fixed
-  step AD, and Armijo backtracking AD under deterministic target noise.
+  step AD, and Armijo backtracking AD under deterministic target noise;
+  \item a browser-facing inverse recovery page with automated headless Chrome
+  timing for the full AD-line optimization loop.
 \end{itemize}
 
 \section{Background}
@@ -282,8 +289,8 @@ native Rust, WebAssembly running in Node.js, and scalar JavaScript. The benchmar
 uses 500 steps and five measured trials. WebAssembly is consistently faster than
 scalar JavaScript by \(1.22\times\)--\(1.27\times\), while native Rust remains
 \(1.31\times\)--\(1.49\times\) faster than WebAssembly in this setup. These
-numbers are intentionally reported as scalar baselines; SIMD acceleration is not
-claimed in this paper.
+numbers are intentionally reported as scalar baselines, separate from the SIMD
+kernel discussed below.
 
 \begin{table}[!t]
 \renewcommand{\arraystretch}{1.15}
@@ -301,6 +308,29 @@ Grid & Native & WASM & JS & WASM/JS & Native/WASM\\
 \end{tabular}
 \end{table}
 
+Table~\ref{tab:simd} reports a separate WebAssembly SIMD build using a
+four-lane \texttt{f32x4} interior update and scalar boundary handling. The SIMD
+entrypoint is validated against the scalar WebAssembly entrypoint before
+benchmarking. The first validation run observed maximum field deltas below
+\(8\times10^{-7}\), consistent with different single-precision operation
+ordering.
+
+\begin{table}[!t]
+\renewcommand{\arraystretch}{1.15}
+\caption{WebAssembly SIMD Forward Solver Performance}
+\label{tab:simd}
+\centering
+\begin{tabular}{lccc}
+\hline
+Grid & Scalar & SIMD & Speedup\\
+\hline
+\(128^2\) & 0.119010 & 0.016002 & \(7.44\times\)\\
+\(256^2\) & 0.473616 & 0.055237 & \(8.57\times\)\\
+\(512^2\) & 1.910463 & 0.273835 & \(6.98\times\)\\
+\hline
+\end{tabular}
+\end{table}
+
 \subsection{Rendering Measurements}
 Zero-copy WASM field views remove full-field copy cost. In Node.js, field-to-RGBA
 conversion remains under 1 ms per frame at \(512\times512\). Manual Chrome
@@ -308,6 +338,10 @@ measurements, summarized in Table~\ref{tab:render}, show that field-to-RGBA
 conversion dominates \texttt{ImageData} construction and \texttt{putImageData}
 for the tested browser path. At \(512\times512\), conversion takes
 0.817 ms/frame while direct \texttt{putImageData} remains below 0.1 ms/frame.
+An automated HeadlessChrome 147 pass produced matching checksums and a similar
+512-grid conversion time of 0.778 ms/frame, but lower direct
+\texttt{putImageData} timing. The manual and headless tables are therefore kept
+separate in the public experiment log.
 
 \begin{table}[!t]
 \renewcommand{\arraystretch}{1.15}
@@ -427,6 +461,33 @@ Here ``grid clean candidate'' means the dense grid returns the same
 stable'' means the backtracking AD optimizer remains in the same final parameter
 region across all four deterministic seeds.
 
+\subsection{Browser Inverse Timing}
+The browser-facing inverse page exposes the same Armijo AD-line optimizer through
+WebAssembly and reports compact JSON progress data. Table~\ref{tab:browserinv}
+shows automated HeadlessChrome 147 timings for the default clean inverse target.
+Timing starts after WebAssembly initialization and includes the exported
+optimizer call plus JavaScript JSON parsing and page update work.
+
+\begin{table}[!t]
+\renewcommand{\arraystretch}{1.15}
+\caption{Browser Inverse Recovery Timing in HeadlessChrome}
+\label{tab:browserinv}
+\centering
+\begin{tabular}{lcccc}
+\hline
+Grid & Eval. & Elapsed & ms/iter. & ms/eval.\\
+\hline
+\(32^2\) & 21 & 20.100 & 2.233 & 0.957\\
+\(64^2\) & 17 & 68.100 & 7.567 & 4.006\\
+\(96^2\) & 17 & 141.600 & 15.733 & 8.329\\
+\hline
+\end{tabular}
+\end{table}
+
+These timings demonstrate that the full inverse loop runs in the browser path,
+not only in the native command-line experiments. They should be interpreted as
+local engineering measurements rather than cross-browser performance claims.
+
 \section{Discussion}
 The experiments support three claims. First, Rust and WebAssembly can host a
 validated interactive Gray--Scott solver without sacrificing deterministic
@@ -444,17 +505,20 @@ would motivate adjoint or reverse-mode methods.
 The inverse task uses a fixed initial condition, two scalar parameters, and final
 field MSE. The experiments do not yet establish robustness to unknown initial
 conditions, observational masks, different time horizons, or real measurement
-noise. Browser rendering measurements were collected manually for the browser
-path and should be automated before making strong cross-browser claims. SIMD
-acceleration of the Laplacian kernel is left to future work.
+noise. Browser rendering and inverse-loop measurements cover Chrome-derived
+environments only; more browsers and machines are needed before making strong
+cross-browser claims. The inverse loop currently runs synchronously on the
+browser main thread, so a Web Worker implementation is still needed for larger
+interactive browser runs.
 
 \section{Conclusion}
 This paper presents a validated Rust/WebAssembly Gray--Scott implementation with
-browser rendering benchmarks and differentiable inverse recovery. Forward-mode
-AD gives a measured gradient-cost advantage over finite differences, and Armijo
-backtracking AD recovers low-loss parameters with far fewer evaluations than a
-dense grid search. The result is a compact, reproducible platform for
-interactive differentiable reaction--diffusion experiments.
+browser rendering benchmarks, WebAssembly SIMD acceleration, and differentiable
+inverse recovery. Forward-mode AD gives a measured gradient-cost advantage over
+finite differences, and Armijo backtracking AD recovers low-loss parameters with
+far fewer evaluations than a dense grid search. The result is a compact,
+reproducible platform for interactive differentiable reaction--diffusion
+experiments.
 
 \section*{Acknowledgment}
 The author thanks the open-source Rust and WebAssembly communities whose tooling

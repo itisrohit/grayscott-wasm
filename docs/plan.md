@@ -1072,15 +1072,14 @@ forward-mode AD, inverse recovery, noise sensitivity, and paper draft all exist.
 
 Immediate next task:
 
-1. Commit the browser inverse timing runner and experiment-log table after the
-   quality gate passes.
-2. Move the browser inverse loop into a Web Worker if larger grids or longer
+1. Commit the paper update that adds post-`paper-draft-v1` SIMD, automated
+   browser render, and browser inverse timing results.
+2. Recompile the paper in Overleaf and check table placement/page count.
+3. Move the browser inverse loop into a Web Worker if larger grids or longer
    inverse runs block the UI.
-3. Update the paper with the post-`paper-draft-v1` SIMD, automated browser
-   render, and browser inverse results.
 
 Future work after browser inverse:
 
 - repeat browser render measurements across more browsers and machines,
-- update the paper with the post-`paper-draft-v1` SIMD and browser-inverse
-  results.
+- collect a non-headless browser inverse timing run,
+- prepare the next paper/arXiv checkpoint after the Overleaf compile is clean.
