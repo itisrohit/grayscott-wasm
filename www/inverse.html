@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gray-Scott Browser Inverse Recovery</title>
+    <link rel="stylesheet" href="./inverse.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Gray-Scott Browser Inverse Recovery</h1>
+        <button id="run" type="button">Run</button>
+      </header>
+
+      <section class="controls" aria-label="Inverse recovery settings">
+        <label>
+          Grid
+          <select id="grid">
+            <option value="32">32 x 32</option>
+            <option value="64" selected>64 x 64</option>
+            <option value="96">96 x 96</option>
+          </select>
+        </label>
+        <label>
+          Steps
+          <input id="steps" type="number" min="10" max="1000" step="10" value="100" />
+        </label>
+        <label>
+          Target F
+          <input id="target-feed" type="number" min="0.01" max="0.09" step="0.00001" value="0.06055" />
+        </label>
+        <label>
+          Target k
+          <input id="target-kill" type="number" min="0.04" max="0.08" step="0.00001" value="0.06245" />
+        </label>
+        <label>
+          Initial F
+          <input id="initial-feed" type="number" min="0.045" max="0.070" step="0.00001" value="0.06000" />
+        </label>
+        <label>
+          Initial k
+          <input id="initial-kill" type="number" min="0.055" max="0.070" step="0.00001" value="0.06300" />
+        </label>
+        <label>
+          Iterations
+          <input id="iterations" type="number" min="1" max="40" step="1" value="8" />
+        </label>
+        <label>
+          Initial step
+          <input id="learning-rate" type="number" min="0.000001" max="0.01" step="0.000001" value="0.001" />
+        </label>
+        <label>
+          Noise
+          <input id="noise" type="number" min="0" max="0.2" step="0.001" value="0" />
+        </label>
+        <label>
+          Seed
+          <input id="seed" type="number" min="0" max="4294967295" step="1" value="24301" />
+        </label>
+      </section>
+
+      <section class="summary" aria-label="Recovery summary">
+        <div class="metric">
+          <span>Final F</span>
+          <strong id="final-feed">-</strong>
+        </div>
+        <div class="metric">
+          <span>Final k</span>
+          <strong id="final-kill">-</strong>
+        </div>
+        <div class="metric">
+          <span>Clean loss</span>
+          <strong id="clean-loss">-</strong>
+        </div>
+        <div class="metric">
+          <span>Evaluations</span>
+          <strong id="evaluated">-</strong>
+        </div>
+      </section>
+
+      <section class="results" aria-label="Optimizer results">
+        <table>
+          <thead>
+            <tr>
+              <th>Iter</th>
+              <th>F</th>
+              <th>k</th>
+              <th>Loss</th>
+              <th>dL/dF</th>
+              <th>dL/dk</th>
+            </tr>
+          </thead>
+          <tbody id="history"></tbody>
+        </table>
+        <pre id="status">Ready.</pre>
+      </section>
+    </main>
+
+    <script type="module" src="./inverse.js"></script>
+  </body>
+</html>

@@ -1200,6 +1200,65 @@ Interpretation:
 
 ---
 
+## Browser Inverse Recovery Page
+
+Build command:
+
+```bash
+bash tools/build_wasm_web.sh
+```
+
+Manual browser URL:
+
+```text
+http://localhost:8000/www/inverse.html
+```
+
+Node smoke-test command for the same exported WASM function:
+
+```bash
+bash tools/build_wasm_node.sh
+node - <<'JS'
+const { inverse_ad_line_json } = require('./pkg-node/grayscott_wasm.js');
+const result = JSON.parse(
+  inverse_ad_line_json(64, 64, 100, 5, 0.06055, 0.06245, 0.060, 0.063, 8, 0.001, 0.0, 24301),
+);
+console.log(JSON.stringify({
+  final_feed: result.final_feed,
+  final_kill: result.final_kill,
+  final_loss_clean: result.final_loss_clean,
+  evaluated: result.evaluated,
+  steps: result.steps_history.length,
+}, null, 2));
+JS
+```
+
+Observed smoke-test output:
+
+```json
+{
+  "final_feed": 0.05989385,
+  "final_kill": 0.062670857,
+  "final_loss_clean": 1.7397373e-7,
+  "evaluated": 17,
+  "steps": 9
+}
+```
+
+Interpretation:
+
+- The browser-facing WASM API now exposes the same Armijo backtracking AD
+  optimizer used in the native inverse experiments.
+- `www/inverse.html` lets the user set grid, rollout steps, target `F/k`,
+  initial `F/k`, iteration count, line-search initial step, and synthetic target
+  noise.
+- The page reports final recovered `F/k`, clean loss, evaluation count, and a
+  per-iteration optimizer table.
+- This is a browser UI path for inverse recovery. A real browser timing run is
+  still needed before making browser-performance claims for inverse recovery.
+
+---
+
 ## Quality Gate
 
 Local quality command:

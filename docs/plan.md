@@ -137,6 +137,7 @@ forward solver. The following pieces exist and are measured:
 - Node.js scalar JavaScript benchmark.
 - Node.js scalar WASM benchmark via `wasm-pack`.
 - Node.js WASM SIMD build, scalar-vs-SIMD validation, and SIMD benchmark.
+- Browser AD-line inverse recovery page and WASM export.
 - Rust-vs-NumPy full-field validation.
 - WASM-vs-NumPy full-field validation.
 - Browser WASM package build for real browser measurements.
@@ -182,6 +183,19 @@ Current WASM SIMD build and benchmark commands:
 bash tools/build_wasm_node_simd.sh
 node tools/check_wasm_simd.mjs
 node tools/bench_forward_wasm_simd.mjs --grids 128,256,512 --steps 500 --trials 5
+```
+
+Current browser inverse recovery page:
+
+```bash
+bash tools/build_wasm_web.sh
+python3 -m http.server 8000
+```
+
+Then open:
+
+```text
+http://localhost:8000/www/inverse.html
 ```
 
 Current browser rendering benchmark:
@@ -753,9 +767,11 @@ Metrics:
 
 Implementation:
 
-- run solver in a Web Worker,
-- send only compact progress data to the main thread,
-- render `u` as an image buffer.
+- current first pass runs the AD-line inverse optimizer from a browser page and
+  returns compact JSON progress data,
+- next upgrade should move the inverse run into a Web Worker before pushing to
+  larger grids or long browser timing runs,
+- render `u` as an image buffer only after the worker path is stable.
 
 ---
 
@@ -1032,13 +1048,16 @@ forward-mode AD, inverse recovery, noise sensitivity, and paper draft all exist.
 
 Immediate next task:
 
-1. Finish documenting and quality-checking the WASM SIMD implementation.
-2. Commit the SIMD kernel, validation script, benchmark script, and experiment log.
-3. Move next to the browser inverse loop.
+1. Commit the browser inverse recovery page and WASM export after the quality
+   gate passes.
+2. Collect a second real-browser render benchmark on the same manual protocol
+   used for the first Chrome run.
+3. Move the browser inverse loop into a Web Worker if larger grids or longer
+   inverse runs block the UI.
 
-Future work after SIMD:
+Future work after browser inverse:
 
-- expose AD-line inverse recovery in the browser UI,
 - repeat browser render measurements across more browsers and machines,
+- measure browser inverse runtime per optimizer iteration,
 - update the paper with the post-`paper-draft-v1` SIMD and browser-inverse
   results.

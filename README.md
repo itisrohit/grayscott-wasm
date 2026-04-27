@@ -183,6 +183,19 @@ Then open:
 http://localhost:8000/www/render_bench.html
 ```
 
+Run the browser inverse recovery page:
+
+```bash
+bash tools/build_wasm_web.sh
+python3 -m http.server 8000
+```
+
+Then open:
+
+```text
+http://localhost:8000/www/inverse.html
+```
+
 Check all JavaScript files:
 
 ```bash
