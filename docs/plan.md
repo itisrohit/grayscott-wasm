@@ -233,10 +233,10 @@ Automated local headless Chrome render benchmark:
 node tools/run_browser_render_bench.mjs --grid 512 --frames 300 --steps 250
 ```
 
-A second local HeadlessChrome 147 pass produced matching checksums and
-`0.777667 ms/frame` field-to-RGBA at `512 x 512`. Headless Chrome reported lower
-`putImageData` costs than the earlier interactive run, so keep those tables
-separate.
+A second local HeadlessChrome 147 pass using three runs per grid produced
+matching checksums and a median `0.779333 ms/frame` field-to-RGBA at
+`512 x 512`. Headless Chrome reported lower `putImageData` costs than the
+earlier interactive run, so keep those tables separate.
 
 Current inverse baseline command:
 

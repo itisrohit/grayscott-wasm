@@ -338,8 +338,8 @@ measurements, summarized in Table~\ref{tab:render}, show that field-to-RGBA
 conversion dominates \texttt{ImageData} construction and \texttt{putImageData}
 for the tested browser path. At \(512\times512\), conversion takes
 0.817 ms/frame while direct \texttt{putImageData} remains below 0.1 ms/frame.
-An automated HeadlessChrome 147 pass produced matching checksums and a similar
-512-grid conversion time of 0.778 ms/frame, but lower direct
+An automated three-run HeadlessChrome 147 pass produced matching checksums and a
+similar 512-grid median conversion time of 0.779 ms/frame, but lower direct
 \texttt{putImageData} timing. The manual and headless tables are therefore kept
 separate in the public experiment log.
 
@@ -505,11 +505,10 @@ would motivate adjoint or reverse-mode methods.
 The inverse task uses a fixed initial condition, two scalar parameters, and final
 field MSE. The experiments do not yet establish robustness to unknown initial
 conditions, observational masks, different time horizons, or real measurement
-noise. Browser rendering and inverse-loop measurements cover Chrome-derived
-environments only; more browsers and machines are needed before making strong
-cross-browser claims. The inverse loop currently runs synchronously on the
-browser main thread, so a Web Worker implementation is still needed for larger
-interactive browser runs.
+noise. Browser inverse measurements are from headless Chrome on a single
+machine. Interactive and cross-browser measurements are left to future work. The
+inverse loop currently runs synchronously on the browser main thread, so a Web
+Worker implementation is still needed for larger interactive browser runs.
 
 \section{Conclusion}
 This paper presents a validated Rust/WebAssembly Gray--Scott implementation with

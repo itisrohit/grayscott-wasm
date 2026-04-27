@@ -1267,10 +1267,26 @@ Server command:
 python3 -m http.server 8000
 ```
 
-Benchmark command:
+Single-grid benchmark command:
 
 ```bash
 node tools/run_browser_render_bench.mjs --grid 512 --frames 300 --steps 250
+```
+
+Three-run protocol used for the recorded table:
+
+```bash
+node tools/run_browser_render_bench.mjs --port 9351 --grid 128 --frames 300 --steps 250
+node tools/run_browser_render_bench.mjs --port 9352 --grid 128 --frames 300 --steps 250
+node tools/run_browser_render_bench.mjs --port 9353 --grid 128 --frames 300 --steps 250
+
+node tools/run_browser_render_bench.mjs --port 9354 --grid 256 --frames 300 --steps 250
+node tools/run_browser_render_bench.mjs --port 9355 --grid 256 --frames 300 --steps 250
+node tools/run_browser_render_bench.mjs --port 9356 --grid 256 --frames 300 --steps 250
+
+node tools/run_browser_render_bench.mjs --port 9357 --grid 512 --frames 300 --steps 250
+node tools/run_browser_render_bench.mjs --port 9358 --grid 512 --frames 300 --steps 250
+node tools/run_browser_render_bench.mjs --port 9359 --grid 512 --frames 300 --steps 250
 ```
 
 The script launches local Chrome through the DevTools protocol, opens
@@ -1289,14 +1305,29 @@ Settings:
 
 - Frames: `300`
 - Warmup steps: `250`
+- Runs per grid: `3`
 
-Measured results:
+Raw measured results:
+
+| Grid | Run | Field to RGBA | new ImageData | 2D putImageData | OffscreenCanvas putImageData | OffscreenCanvas ImageBitmap transfer | Checksum |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 128x128 | 1 | 0.064333 | 0.000333 | 0.004000 | 0.003000 | 0.008667 | 92126 |
+| 128x128 | 2 | 0.049667 | 0.000333 | 0.002000 | 0.001667 | 0.007000 | 92126 |
+| 128x128 | 3 | 0.052667 | 0.000333 | 0.002000 | 0.002000 | 0.006667 | 92126 |
+| 256x256 | 1 | 0.191333 | 0.000333 | 0.006667 | 0.006333 | 0.016333 | 369296 |
+| 256x256 | 2 | 0.192000 | 0.000667 | 0.006000 | 0.006000 | 0.016667 | 369296 |
+| 256x256 | 3 | 0.191333 | 0.000333 | 0.006000 | 0.006333 | 0.016667 | 369296 |
+| 512x512 | 1 | 0.781000 | 0.000333 | 0.023000 | 0.022667 | 0.123000 | 1475932 |
+| 512x512 | 2 | 0.778667 | 0.000333 | 0.022667 | 0.023000 | 0.124333 | 1475932 |
+| 512x512 | 3 | 0.779333 | 0.000667 | 0.022667 | 0.023667 | 0.124667 | 1475932 |
+
+Median results:
 
 | Grid | Field to RGBA | new ImageData | 2D putImageData | OffscreenCanvas putImageData | OffscreenCanvas ImageBitmap transfer | Checksum |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| 128x128 | 0.050000 | 0.000333 | 0.002333 | 0.002000 | 0.006667 | 92126 |
-| 256x256 | 0.191667 | 0.000667 | 0.006000 | 0.006333 | 0.016000 | 369296 |
-| 512x512 | 0.777667 | 0.000333 | 0.023333 | 0.022667 | 0.120000 | 1475932 |
+| 128x128 | 0.052667 | 0.000333 | 0.002000 | 0.002000 | 0.007000 | 92126 |
+| 256x256 | 0.191333 | 0.000333 | 0.006000 | 0.006333 | 0.016667 | 369296 |
+| 512x512 | 0.779333 | 0.000333 | 0.022667 | 0.023000 | 0.124333 | 1475932 |
 
 Interpretation:
 
