@@ -463,10 +463,10 @@ region across all four deterministic seeds.
 
 \subsection{Browser Inverse Timing}
 The browser-facing inverse page exposes the same Armijo AD-line optimizer through
-WebAssembly and reports compact JSON progress data. Table~\ref{tab:browserinv}
+WebAssembly and runs it inside a module Web Worker. Table~\ref{tab:browserinv}
 shows automated HeadlessChrome 147 timings for the default clean inverse target.
-Timing starts after WebAssembly initialization and includes the exported
-optimizer call plus JavaScript JSON parsing and page update work.
+Timing starts after worker-side WebAssembly initialization and includes the
+exported optimizer call plus worker-side JSON parsing.
 
 \begin{table}[!t]
 \renewcommand{\arraystretch}{1.15}
@@ -477,16 +477,17 @@ optimizer call plus JavaScript JSON parsing and page update work.
 \hline
 Grid & Eval. & Elapsed & ms/iter. & ms/eval.\\
 \hline
-\(32^2\) & 21 & 20.100 & 2.233 & 0.957\\
-\(64^2\) & 17 & 68.100 & 7.567 & 4.006\\
-\(96^2\) & 17 & 141.600 & 15.733 & 8.329\\
+\(32^2\) & 21 & 22.200 & 2.467 & 1.057\\
+\(64^2\) & 17 & 68.000 & 7.556 & 4.000\\
+\(96^2\) & 17 & 142.800 & 15.867 & 8.400\\
 \hline
 \end{tabular}
 \end{table}
 
-These timings demonstrate that the full inverse loop runs in the browser path,
-not only in the native command-line experiments. They should be interpreted as
-local engineering measurements rather than cross-browser performance claims.
+These timings demonstrate that the full inverse loop runs in the browser path
+without blocking the main page during the optimizer call. They should be
+interpreted as local engineering measurements rather than cross-browser
+performance claims.
 
 \section{Discussion}
 The experiments support three claims. First, Rust and WebAssembly can host a
@@ -506,9 +507,7 @@ The inverse task uses a fixed initial condition, two scalar parameters, and fina
 field MSE. The experiments do not yet establish robustness to unknown initial
 conditions, observational masks, different time horizons, or real measurement
 noise. Browser inverse measurements are from headless Chrome on a single
-machine. Interactive and cross-browser measurements are left to future work. The
-inverse loop currently runs synchronously on the browser main thread, so a Web
-Worker implementation is still needed for larger interactive browser runs.
+machine. Interactive and cross-browser measurements are left to future work.
 
 \section{Conclusion}
 This paper presents a validated Rust/WebAssembly Gray--Scott implementation with

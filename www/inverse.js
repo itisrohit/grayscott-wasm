@@ -1,5 +1,3 @@
-import init, { inverse_ad_line_json } from "../pkg-web/grayscott_wasm.js";
-
 const runButton = document.querySelector("#run");
 const historyBody = document.querySelector("#history");
 const statusOutput = document.querySelector("#status");
@@ -10,7 +8,30 @@ const evaluated = document.querySelector("#evaluated");
 const elapsedMs = document.querySelector("#elapsed-ms");
 const msPerEval = document.querySelector("#ms-per-eval");
 
-let wasmReady = false;
+const worker = new Worker("./inverse_worker.js", { type: "module" });
+let nextRequestId = 1;
+const pendingRequests = new Map();
+
+worker.addEventListener("message", (event) => {
+  const { id, ok, result, error } = event.data;
+  const pending = pendingRequests.get(id);
+  if (!pending) {
+    return;
+  }
+  pendingRequests.delete(id);
+  if (ok) {
+    pending.resolve(result);
+  } else {
+    pending.reject(new Error(error));
+  }
+});
+
+worker.addEventListener("error", (event) => {
+  for (const pending of pendingRequests.values()) {
+    pending.reject(new Error(event.message));
+  }
+  pendingRequests.clear();
+});
 
 function inputNumber(id) {
   const input = document.querySelector(id);
@@ -89,38 +110,38 @@ function setHistory(steps) {
   );
 }
 
+function readPayload() {
+  const grid = inputNumber("#grid");
+  return {
+    grid,
+    steps: inputNumber("#steps"),
+    radius: 5,
+    targetFeed: inputNumber("#target-feed"),
+    targetKill: inputNumber("#target-kill"),
+    initialFeed: inputNumber("#initial-feed"),
+    initialKill: inputNumber("#initial-kill"),
+    iterations: inputNumber("#iterations"),
+    learningRate: inputNumber("#learning-rate"),
+    noise: inputNumber("#noise"),
+    seed: inputNumber("#seed"),
+  };
+}
+
+function runInverseInWorker(payload) {
+  const id = nextRequestId;
+  nextRequestId += 1;
+  return new Promise((resolve, reject) => {
+    pendingRequests.set(id, { resolve, reject });
+    worker.postMessage({ id, payload });
+  });
+}
+
 async function runInverse() {
   runButton.disabled = true;
   writeStatus("Running...");
 
   try {
-    if (!wasmReady) {
-      await init();
-      wasmReady = true;
-    }
-
-    const grid = inputNumber("#grid");
-    const start = performance.now();
-    const result = JSON.parse(
-      inverse_ad_line_json(
-        grid,
-        grid,
-        inputNumber("#steps"),
-        5,
-        inputNumber("#target-feed"),
-        inputNumber("#target-kill"),
-        inputNumber("#initial-feed"),
-        inputNumber("#initial-kill"),
-        inputNumber("#iterations"),
-        inputNumber("#learning-rate"),
-        inputNumber("#noise"),
-        inputNumber("#seed"),
-      ),
-    );
-    const elapsed = performance.now() - start;
-    result.elapsed_ms = elapsed;
-    result.ms_per_iteration = elapsed / Math.max(1, result.steps_history.length);
-    result.ms_per_evaluation = elapsed / Math.max(1, result.evaluated);
+    const result = await runInverseInWorker(readPayload());
 
     setSummary(result);
     setHistory(result.steps_history);
@@ -137,6 +158,7 @@ async function runInverse() {
       elapsed_ms: result.elapsed_ms,
       ms_per_iteration: result.ms_per_iteration,
       ms_per_evaluation: result.ms_per_evaluation,
+      worker: true,
       user_agent: navigator.userAgent,
     });
   } catch (error) {
@@ -158,6 +180,7 @@ const shouldAutorun = applyQuerySettings();
 writeStatus({
   ready: true,
   page: "browser inverse recovery",
+  worker: true,
   user_agent: navigator.userAgent,
 });
 

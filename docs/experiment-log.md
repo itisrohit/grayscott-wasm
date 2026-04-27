@@ -1249,13 +1249,15 @@ Interpretation:
 
 - The browser-facing WASM API now exposes the same Armijo backtracking AD
   optimizer used in the native inverse experiments.
+- The browser page runs the optimizer in `www/inverse_worker.js`, so the heavy
+  inverse recovery call is off the main UI thread.
 - `www/inverse.html` lets the user set grid, rollout steps, target `F/k`,
   initial `F/k`, iteration count, line-search initial step, and synthetic target
   noise.
 - The page reports final recovered `F/k`, clean loss, evaluation count, and a
   per-iteration optimizer table.
-- This is a browser UI path for inverse recovery. A real browser timing run is
-  still needed before making browser-performance claims for inverse recovery.
+- This is a browser UI path for inverse recovery. Headless Chrome timings are
+  recorded below; interactive and cross-browser measurements remain future work.
 
 ---
 
@@ -1355,8 +1357,9 @@ node tools/run_browser_inverse_bench.mjs --grid 64 --steps 100 --iterations 8
 
 The script launches local Chrome through the DevTools protocol, opens
 `www/inverse.html?autorun=1`, waits for the optimizer table and status JSON, and
-prints the result. The elapsed time starts after WASM initialization and covers
-the exported inverse optimizer call plus JavaScript JSON parse/update work.
+prints the result. The page executes the optimizer inside a module Web Worker.
+The elapsed time starts after worker-side WASM initialization and covers the
+exported inverse optimizer call plus worker-side JSON parsing.
 
 Environment:
 
@@ -1373,7 +1376,15 @@ Settings:
 - Noise: `0`
 - Seed: `24301`
 
-Measured results:
+Measured results after moving execution into `www/inverse_worker.js`:
+
+| Grid | Evaluations | History rows | Worker | Elapsed ms | ms/iteration | ms/evaluation | Final clean loss | \|F error\| | \|k error\| |
+| --- | ---: | ---: | :---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 32x32 | 21 | 9 | yes | 22.200000 | 2.466667 | 1.057143 | 6.884e-7 | 0.000648502 | 0.000220701 |
+| 64x64 | 17 | 9 | yes | 68.000000 | 7.555556 | 4.000000 | 1.740e-7 | 0.000656150 | 0.000220858 |
+| 96x96 | 17 | 9 | yes | 142.800000 | 15.866667 | 8.400000 | 1.737e-7 | 0.000649724 | 0.000246741 |
+
+Earlier pre-worker headless scaling check:
 
 | Grid | Evaluations | History rows | Elapsed ms | ms/iteration | ms/evaluation | Final clean loss | \|F error\| | \|k error\| |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -1385,6 +1396,8 @@ Interpretation:
 
 - The full inverse loop now runs from a browser page without Python or native
   helper code in the user-facing path.
+- The heavy inverse optimizer runs in a module Web Worker and the returned
+  status includes `worker: true`.
 - Runtime scales with grid size as expected for the repeated forward solves
   inside the AD-line optimizer.
 - These are headless Chrome timings. Use them as repeatable local engineering

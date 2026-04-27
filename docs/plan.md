@@ -206,10 +206,12 @@ node tools/run_browser_inverse_bench.mjs --grid 64 --steps 100 --iterations 8
 
 Current browser inverse result:
 
-- In HeadlessChrome 147, the browser page completes the `64 x 64`, 100-step,
-  8-iteration AD-line recovery in `68.1 ms` after WASM initialization.
-- The measured cost is `7.57 ms/iteration` and `4.01 ms/evaluation` for the
+- In HeadlessChrome 147, the worker-backed browser page completes the `64 x 64`,
+  100-step, 8-iteration AD-line recovery in `68.0 ms` after WASM initialization.
+- The measured cost is `7.56 ms/iteration` and `4.00 ms/evaluation` for the
   default target and initial point.
+- The browser inverse page now executes the optimizer in `www/inverse_worker.js`
+  instead of blocking the main UI thread.
 
 Current browser rendering benchmark:
 
@@ -1072,14 +1074,13 @@ forward-mode AD, inverse recovery, noise sensitivity, and paper draft all exist.
 
 Immediate next task:
 
-1. Commit the paper update that adds post-`paper-draft-v1` SIMD, automated
-   browser render, and browser inverse timing results.
-2. Recompile the paper in Overleaf and check table placement/page count.
-3. Move the browser inverse loop into a Web Worker if larger grids or longer
-   inverse runs block the UI.
+1. Recompile the paper in Overleaf and check table placement/page count.
+2. Collect one interactive browser inverse timing if a non-headless number is
+   needed for the final submission.
+3. Prepare the next paper/arXiv checkpoint after the Overleaf compile is clean.
 
 Future work after browser inverse:
 
 - repeat browser render measurements across more browsers and machines,
 - collect a non-headless browser inverse timing run,
-- prepare the next paper/arXiv checkpoint after the Overleaf compile is clean.
+- package a release archive with source, results, and paper assets.

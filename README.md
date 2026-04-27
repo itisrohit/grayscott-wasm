@@ -202,6 +202,8 @@ Then open:
 http://localhost:8000/www/inverse.html
 ```
 
+The inverse page runs the optimizer in a module Web Worker.
+
 Run the browser inverse recovery page through local headless Chrome:
 
 ```bash
