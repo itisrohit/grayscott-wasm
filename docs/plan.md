@@ -34,7 +34,7 @@ Defensible claim:
 
 > "We present and evaluate a Rust/WebAssembly implementation of a differentiable
 > Gray-Scott reaction-diffusion solver for small-parameter inverse recovery in the
-> browser. The study quantifies forward-solver accuracy, WASM/SIMD performance,
+> browser. The study quantifies forward-solver accuracy, scalar Rust/WASM/JS performance,
 > forward-mode automatic differentiation overhead, gradient correctness, and inverse
 > recovery robustness under initialization and noise."
 
@@ -115,6 +115,18 @@ paper.
 
 ## 2.1 Current Artifact Status
 
+Current paper status:
+
+- IEEEtran paper source exists at `paper/main.tex`.
+- Bibliography exists at `paper/references.bib`.
+- Figures live in `paper/figures/`.
+- A compiled Overleaf PDF has been added locally at
+  `paper/grayscott_wasm_IEEE_Journal_Paper.pdf`.
+- The current paper scope is scalar Rust/WASM plus forward-mode AD. SIMD is
+  explicitly future work, not a current contribution.
+- The repository URL is included in the paper:
+  `https://github.com/itisrohit/grayscott-wasm`.
+
 As of the current implementation, the project has moved past planning for the
 forward solver. The following pieces exist and are measured:
 
@@ -144,9 +156,8 @@ Important measured result:
 - Scalar WASM is only about `1.22x-1.27x` faster than scalar JavaScript in the
   current Node.js benchmark.
 - Native Rust is still about `1.31x-1.49x` faster than scalar WASM.
-- Therefore, the paper must not claim a large scalar WASM speedup. Any stronger
-  performance claim must come from measured SIMD, better memory access, or a
-  browser-specific result.
+- Therefore, the paper does not claim a large scalar WASM speedup. SIMD
+  acceleration of the Laplacian kernel is left to future work.
 
 Current quality command:
 
@@ -320,9 +331,12 @@ Current inverse result:
 - Backtracking uses the standard sufficient-decrease rule with shrink `0.5` and
   Armijo constant `1e-4`; these are conventional conservative defaults for
   gradient descent line search.
-- These validate the inverse-recovery harness enough to move next to
-  multi-start AD or longer-rollout validation before making broader
-  inverse-recovery claims.
+- These validate the inverse-recovery harness enough for the current paper
+  scope. Do not add multi-start AD, longer rollouts, or SIMD before submission
+  unless PDF review exposes a concrete gap.
+- The paper draft now reports scalar performance, full-field correctness,
+  multi-grid correctness, browser rendering, gradient correctness, AD overhead,
+  inverse recovery, and noise sensitivity.
 
 ---
 
@@ -391,8 +405,9 @@ Use these contributions, not the old overclaiming ones.
 ### C1 - Browser-Deployable Solver With Reproducible Benchmarks
 
 A Rust implementation of the Gray-Scott finite-difference solver compiled to
-WebAssembly, with scalar and SIMD builds benchmarked against JavaScript and native
-reference implementations across multiple grid sizes.
+WebAssembly, with scalar WASM benchmarked against JavaScript and native Rust
+reference implementations across multiple grid sizes. SIMD is not claimed in the
+current paper.
 
 What must be measured:
 
@@ -534,9 +549,10 @@ Safety note:
 - Browser rendering code should recreate views after any operation that may
   allocate or grow memory.
 
-### SIMD
+### SIMD Future Work
 
-Do not assume `#[target_feature(enable = "simd128")]` is enough. For Rust/WASM:
+SIMD is deferred. If it is added after the current paper, do not assume
+`#[target_feature(enable = "simd128")]` is enough. For Rust/WASM:
 
 - keep scalar and SIMD implementations separate,
 - gate SIMD with `#[cfg(target_feature = "simd128")]`,
@@ -767,9 +783,9 @@ Explain:
 - memory layout,
 - time stepping,
 - boundary conditions,
-- scalar and SIMD kernels,
+- scalar Rust/WASM kernels,
 - WASM interface,
-- Web Worker design,
+- browser render path and zero-copy field views,
 - dual-mode derivative propagation,
 - inverse optimization loop.
 
@@ -817,31 +833,30 @@ grayscott-wasm/
   src/
     lib.rs
     solver.rs
-    solver_simd.rs
-    dual.rs
-    solver_dual.rs
     inverse.rs
   www/
     index.html
     main.js
     worker.js
-  bench/
-    bench_forward.js
-    bench_dual.js
-    bench_browser.html
+  benches/
+    inverse_overhead.rs
   reference/
-    reference_numpy.py
-    reference_js.js
-  experiments/
-    run_correctness.py
-    run_recovery.py
-    plot_results.py
-  data/
-    seeds/
-    results/
+    scalar_reference.py
+    numpy_reference.py
+  docs/
+    experiment-log.md
+    manualcheck-browser-render.md
+    plan.md
+  tools/
+    bench_forward_js.mjs
+    bench_forward_wasm.mjs
+    bench_grayscale_render.mjs
+    full_field_metrics.py
+    wasm_full_field_metrics.py
   paper/
     figures/
-    tables/
+    main.tex
+    references.bib
   README.md
 ```
 
@@ -851,12 +866,16 @@ Phases:
 2. Validate scalar correctness with saved initial conditions.
 3. Add WASM build and browser rendering.
 4. Add scalar benchmark harness.
-5. Add SIMD kernel and verify scalar/SIMD parity.
-6. Add dual-mode derivative propagation.
-7. Add finite-difference gradient checks.
-8. Add inverse optimizer and recovery experiments.
-9. Add noise/seed robustness experiments.
-10. Write the paper only after the result tables exist.
+5. Add dual-mode derivative propagation.
+6. Add finite-difference gradient checks.
+7. Add inverse optimizer and recovery experiments.
+8. Add noise/seed robustness experiments.
+9. Write the paper only after the result tables exist.
+10. Compile and archive the paper PDF.
+
+Current status: steps 1--10 are complete for the scalar Rust/WASM paper scope.
+The old SIMD step is no longer a prerequisite for this paper and is now future
+work.
 
 ---
 
@@ -869,7 +888,7 @@ Assuming part-time college workload:
 | 1 | Scalar solver, reference implementations, saved initial conditions |
 | 2 | Correctness validation and basic browser WASM demo |
 | 3 | Benchmark harnesses, JS/WASM/native comparisons |
-| 4 | SIMD implementation and scalar/SIMD parity checks |
+| 4 | Browser rendering and scalar performance measurements |
 | 5 | Dual-mode AD implementation |
 | 6 | Gradient correctness experiment |
 | 7 | Inverse optimizer and synthetic recovery |
@@ -877,7 +896,7 @@ Assuming part-time college workload:
 | 9 | Figures, tables, reproducibility scripts |
 | 10 | Paper draft |
 | 11 | Revision, related work cleanup, artifact documentation |
-| 12 | Final submission decision |
+| 12 | Compiled PDF and final submission decision |
 
 Seven weeks was too optimistic. Ten to twelve weeks is more realistic if the work is
 done properly.
@@ -994,17 +1013,22 @@ Rust dual-number / AD ecosystem:
 
 ## 13. First Concrete Next Step
 
-The original first step is complete: scalar Rust solver, references, validation,
-native benchmarks, JS benchmark, scalar WASM benchmark, and quality gates exist.
+The original implementation plan is complete for the current scalar Rust/WASM
+paper scope: scalar Rust solver, references, validation, native benchmarks, JS
+benchmark, scalar WASM benchmark, browser-render measurements, quality gates,
+forward-mode AD, inverse recovery, noise sensitivity, and paper draft all exist.
 
 Immediate next task:
 
-1. Implement WASM SIMD as a separate interior-cell kernel and validate it
-   against scalar WASM.
-2. Add browser rendering measurements for:
-   - `ImageData` construction,
-   - `putImageData`,
-   - OffscreenCanvas/Web Worker path if used.
+1. Decide whether to commit the compiled PDF
+   `paper/grayscott_wasm_IEEE_Journal_Paper.pdf`.
+2. Create a reproducibility tag after the PDF and plan update are committed, for
+   example `paper-draft-v1`.
+3. Use that tag when referencing the artifact in submissions or preprints.
 
-Only after scalar-vs-SIMD correctness and speed are measured should AD/inverse
-recovery begin.
+Future work, not a blocker for this paper:
+
+- implement a separate WASM SIMD Laplacian kernel,
+- validate scalar/SIMD parity,
+- measure scalar-vs-SIMD speedup,
+- repeat browser measurements across more browsers and machines.
