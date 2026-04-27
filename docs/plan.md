@@ -601,10 +601,10 @@ Safety note:
 - Browser rendering code should recreate views after any operation that may
   allocate or grow memory.
 
-### SIMD Future Work
+### SIMD Implementation Notes
 
-SIMD is deferred. If it is added after the current paper, do not assume
-`#[target_feature(enable = "simd128")]` is enough. For Rust/WASM:
+SIMD is now implemented as a separate WebAssembly `simd128` build and entrypoint.
+For Rust/WASM, keep this discipline:
 
 - keep scalar and SIMD implementations separate,
 - gate SIMD with `#[cfg(target_feature = "simd128")]`,
@@ -793,11 +793,11 @@ Metrics:
 
 Implementation:
 
-- current first pass runs the AD-line inverse optimizer from a browser page and
-  returns compact JSON progress data,
-- next upgrade should move the inverse run into a Web Worker before pushing to
-  larger grids or long browser timing runs,
-- render `u` as an image buffer only after the worker path is stable.
+- the AD-line inverse optimizer runs from `www/inverse.html`,
+- the heavy optimizer call executes inside `www/inverse_worker.js`,
+- the main page receives compact JSON progress/result data and renders the
+  summary table,
+- rendering recovered fields as an image buffer is optional future UI work.
 
 ---
 
@@ -928,8 +928,8 @@ Phases:
 10. Compile and archive the paper PDF.
 
 Current status: steps 1--10 are complete for the scalar Rust/WASM paper scope.
-The old SIMD step is no longer a prerequisite for this paper and is now future
-work.
+The post-draft SIMD and browser-inverse Worker upgrades are also implemented and
+measured.
 
 ---
 
