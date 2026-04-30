@@ -5,6 +5,10 @@ title: Forward Validation and Performance
 
 # Forward Validation and Performance
 
+If you want the solver mechanics first, read
+[Forward Solver Math](./forward-solver-math) before this page. This page is
+about evidence and measurement, not the derivation itself.
+
 ## Why validate first?
 
 Performance numbers are meaningless if the solver is numerically wrong.

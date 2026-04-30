@@ -7,6 +7,10 @@ import { InverseRecoveryVisualizer } from "../src/components/GuideVisuals";
 
 # Inverse Recovery
 
+If you want the algorithm details first, read
+[Inverse Math and Search](./inverse-math-and-search) before this page. This
+page is about what the inverse experiments showed and how to interpret them.
+
 ## Start with the simplest version
 
 If you are new to inverse problems, use this mental model:

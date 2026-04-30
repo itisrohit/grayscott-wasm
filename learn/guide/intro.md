@@ -35,6 +35,9 @@ The guide is split into chapters.
 - **Computing Ideas** explains the software and systems concepts, including how
   browsers load WASM, how CPU and GPU thinking differ, how the solver is
   organized, and how the repo keeps its results trustworthy.
+- **Math and Algorithms** explains the actual Gray-Scott update rules, the
+  discrete solver, the loss function, and the inverse-search methods in the
+  same order they appear in the code.
 - **Common Questions** answers things like "Why CPU instead of GPU?" and "How
   does WASM use memory inside a browser?"
 - **Experiments** explains the benchmark and inverse-recovery results.

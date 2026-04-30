@@ -75,3 +75,22 @@
 .theme-doc-sidebar-item-category-level-1 > .menu__list-item-collapsible {
   font-weight: 700;
 }
+
+.theme-doc-markdown .katex-display {
+  margin: 1.25rem 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.35rem 0;
+}
+
+.theme-doc-markdown .katex-display > .katex {
+  min-width: fit-content;
+}
+
+.theme-doc-markdown .katex-display > .katex > .katex-html {
+  white-space: nowrap;
+}
+
+.theme-doc-markdown .katex {
+  font-size: 1.04em;
+}

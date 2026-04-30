@@ -20,12 +20,22 @@ module.exports = {
     },
     {
       type: "category",
-      label: "Chapter 3: Experiments",
+      label: "Chapter 3: Math and Algorithms",
+      items: [
+        "math-and-algorithms",
+        "algorithm-map",
+        "forward-solver-math",
+        "inverse-math-and-search"
+      ]
+    },
+    {
+      type: "category",
+      label: "Chapter 4: Experiments",
       items: ["forward-validation", "inverse-recovery", "browser-and-simd"]
     },
     {
       type: "category",
-      label: "Chapter 4: Use It Yourself",
+      label: "Chapter 5: Use It Yourself",
       items: ["reproduce-results", "glossary"]
     }
   ]
