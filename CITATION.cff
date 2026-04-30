@@ -4,8 +4,8 @@ title: "grayscott-wasm"
 abstract: "Rust/WebAssembly research artifact for a differentiable Gray-Scott reaction-diffusion solver, browser render benchmarks, and small-parameter inverse recovery."
 type: software
 authors:
-  - family-names: "Kumar"
-    given-names: "Rohit"
+  - family-names: "Das Gupta"
+    given-names: "Rohit Kumar"
     email: "rohitkumar.20246@lpu.in"
 repository-code: "https://github.com/itisrohit/grayscott-wasm"
 url: "https://github.com/itisrohit/grayscott-wasm"
@@ -15,8 +15,8 @@ date-released: "2026-04-30"
 preferred-citation:
   type: article
   authors:
-    - family-names: "Kumar"
-      given-names: "Rohit"
+    - family-names: "Das Gupta"
+      given-names: "Rohit Kumar"
   title: "Differentiable Gray-Scott Reaction-Diffusion in WebAssembly"
   journal: "Unpublished manuscript"
   year: 2026
