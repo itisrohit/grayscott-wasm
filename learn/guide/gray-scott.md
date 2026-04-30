@@ -3,11 +3,23 @@ sidebar_position: 3
 title: Gray-Scott Basics
 ---
 
+import { CellUpdateVisualizer } from "../src/components/GuideVisuals";
+
 # Gray-Scott Basics
 
 ## What is being simulated?
 
 The Gray-Scott model tracks two quantities, usually called `u` and `v`.
+
+If you are not comfortable with the word *concentration*, use this simpler
+picture:
+
+> Imagine two kinds of colored material spread over a tiled board.
+
+Each little tile stores how much of material `u` and material `v` is present.
+
+In more scientific language, those amounts are concentrations. But you do not
+need a strong math background to follow the basic idea.
 
 You can think of them as two chemical concentrations spread across a 2D grid.
 Each cell in the grid stores one `u` value and one `v` value.
@@ -16,6 +28,19 @@ Over time, those values change because of two effects:
 
 - **diffusion**: values spread to nearby cells,
 - **reaction**: `u` and `v` interact locally through nonlinear rules.
+
+## If you hate equations, start here instead
+
+The simulation keeps repeating a simple story:
+
+1. each tile looks at its nearby tiles,
+2. some material spreads,
+3. some material reacts,
+4. fresh material can be fed in,
+5. some material can be removed,
+6. the process repeats many times.
+
+That is enough to generate surprisingly rich patterns.
 
 ## The math idea in one picture
 
@@ -37,10 +62,23 @@ nearby cells matter   +   local chemistry matters   +   time repeats
 
 That repeated local update is enough to create large visible patterns.
 
+You can read this as:
+
+> The next moment depends on the current moment, nearby tiles, and a few rules
+> about spreading and reacting.
+
+<CellUpdateVisualizer />
+
 ## Why do patterns appear?
 
 If the reactions and diffusion rates balance in the right way, the system stops
 being visually uniform. Spots, worms, stripes, and other textures appear.
+
+An everyday analogy is:
+
+> Imagine drops of ink spreading in water while also transforming each other.
+> If the balance is right, the picture does not stay smooth. It organizes into
+> visible structure.
 
 That makes Gray-Scott useful for both:
 
@@ -62,6 +100,25 @@ You can read them in beginner language like this:
 - `k` says how strongly `v` is removed.
 
 Changing them changes the balance of the system.
+
+## What is a time step?
+
+A time step is one small update of the whole grid.
+
+The computer does not jump directly from “start” to “final pattern.” Instead it
+does:
+
+```text
+step 1 -> step 2 -> step 3 -> ... -> step 1000
+```
+
+At each step, every cell is updated using the current rules.
+
+So when you see commands like “run 100 steps” or “run 1000 steps,” that means:
+
+- do the same update rule again and again,
+- let the pattern gradually evolve,
+- observe what the field looks like after many repetitions.
 
 The inverse question is:
 
@@ -91,6 +148,13 @@ The simulation lives on a 2D rectangular lattice such as:
 
 Each grid cell stores floating-point values for `u` and `v`.
 
+If you are new to floating-point numbers, just read them as:
+
+> decimal-like numbers stored by the computer.
+
+They are used because the field values are not just 0 or 1. They vary
+continuously.
+
 ## A cell-update diagram
 
 The update at one cell uses a 5-point neighborhood:
@@ -116,6 +180,28 @@ starts the pattern.
 
 This matters because if the initial condition were changed, the final pattern
 could also change. That is one reason the paper is careful about its limits.
+
+You can think of the seed as the “starting disturbance.” Without some
+disturbance, a completely uniform system would stay boring for much longer.
+
+## What does the solver actually do each round?
+
+At a very beginner-friendly level:
+
+```mermaid
+flowchart TD
+    A[Start with the current grid]
+    B[Look at one cell and its neighbors]
+    C[Apply spreading rules]
+    D[Apply local reaction rules]
+    E[Store the updated value]
+    F[Repeat for every cell]
+    G[Repeat for many time steps]
+
+    A --> B --> C --> D --> E --> F --> G
+```
+
+That is the core loop behind the whole project.
 
 ## Why this is a good teaching model
 

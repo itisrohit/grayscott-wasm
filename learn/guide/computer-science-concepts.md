@@ -64,6 +64,10 @@ flowchart TD
     A --> B --> C --> D --> E --> F
 ```
 
+In very light math language, the stencil is acting like a local weighted
+"nearby influence" rule. The center cell does not update from nowhere. It
+updates by combining its own old value with information from nearby cells.
+
 ## Periodic Boundary Conditions
 
 When the solver reaches an edge, it wraps around to the other side.
@@ -110,6 +114,14 @@ parameters: `F` and `k`.
 That decision is important. Forward-mode AD is a good fit when the number of
 input parameters is small. If the project tried to infer a huge parameter
 vector, the tradeoffs would change.
+
+Beginner translation:
+
+- a derivative tells you how sensitive an output is to an input,
+- AD computes that sensitivity by carrying extra derivative information through
+  the real program,
+- this repo uses that to ask how the final pattern changes when `F` or `k`
+  changes.
 
 ## Inverse Problems
 

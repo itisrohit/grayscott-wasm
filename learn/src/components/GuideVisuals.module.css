@@ -1,0 +1,225 @@
+.panel {
+  border: 1px solid var(--learn-panel-border);
+  border-radius: 10px;
+  background: var(--learn-panel-bg);
+  padding: 1rem;
+  margin: 1rem 0 1.5rem;
+  box-shadow: var(--learn-panel-shadow);
+}
+
+.panelTitle {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.panelText {
+  margin: 0 0 1rem;
+  color: var(--learn-text-muted);
+  line-height: 1.55;
+}
+
+.twoColumn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+.gridDiagram {
+  border: 1px solid var(--learn-panel-border);
+  border-radius: 12px;
+  background: var(--learn-subtle-bg);
+  padding: 1rem;
+}
+
+.gridRowCenter {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 96px));
+  gap: 0.8rem;
+  justify-content: center;
+  margin-bottom: 0.8rem;
+}
+
+.gridCell,
+.gridSpacer {
+  height: 96px;
+}
+
+.gridCell {
+  border-radius: 12px;
+  background: var(--learn-subtle-2-bg);
+  border: 1px solid var(--learn-panel-border);
+  display: grid;
+  place-items: center;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--learn-text-strong);
+}
+
+.gridCellCenter {
+  background: var(--learn-center-bg);
+  border-color: var(--learn-center-border);
+  color: var(--learn-text-strong);
+}
+
+.gridCaption {
+  color: var(--learn-text-muted);
+  line-height: 1.5;
+}
+
+.stepList,
+.stepGrid {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.stepGrid {
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  margin-top: 1rem;
+}
+
+.stepCard {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 0.75rem;
+  align-items: start;
+  padding: 0.9rem;
+  border-radius: 12px;
+  background: var(--learn-subtle-bg);
+  border: 1px solid var(--learn-panel-border);
+}
+
+.stepBadge {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: #1b7a6b;
+  color: #fff;
+  font-weight: 700;
+}
+
+.stepTitle {
+  font-weight: 700;
+  color: var(--learn-text-strong);
+  margin-bottom: 0.2rem;
+}
+
+.stepText {
+  color: var(--learn-text-muted);
+  line-height: 1.5;
+}
+
+.flowRow {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(160px, 1fr));
+  gap: 0.75rem;
+  align-items: stretch;
+}
+
+.flowNode {
+  border-radius: 12px;
+  background: var(--learn-subtle-bg);
+  border: 1px solid var(--learn-panel-border);
+  padding: 1rem;
+  min-height: 92px;
+}
+
+.flowNodeTitle {
+  font-weight: 700;
+  color: var(--learn-text-strong);
+  margin-bottom: 0.25rem;
+}
+
+.flowNodeText {
+  color: var(--learn-text-muted);
+  line-height: 1.45;
+}
+
+.flowArrow {
+  display: none;
+}
+
+.compareGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.compareCard {
+  border-radius: 12px;
+  background: var(--learn-subtle-bg);
+  border: 1px solid var(--learn-panel-border);
+  padding: 1rem;
+}
+
+.compareTitle {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--learn-text-strong);
+}
+
+.compareSubtitle {
+  color: var(--learn-text-muted);
+  margin: 0.25rem 0 0.9rem;
+}
+
+.lanes,
+.lanesShort {
+  display: grid;
+  gap: 0.7rem;
+  margin-bottom: 0.9rem;
+}
+
+.laneLong,
+.laneShort {
+  height: 22px;
+  border-radius: 999px;
+  background: var(--learn-lane-bg);
+}
+
+.lanesShort {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.compareText {
+  color: var(--learn-text-muted);
+  line-height: 1.5;
+}
+
+.pipelineList {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.pipelineItem {
+  border-radius: 12px;
+  background: var(--learn-subtle-bg);
+  border: 1px solid var(--learn-panel-border);
+  padding: 0.95rem 1rem;
+  color: var(--learn-text-strong);
+  line-height: 1.5;
+}
+
+.pipelineArrow {
+  text-align: center;
+  color: #1b7a6b;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+@media (min-width: 900px) {
+  .flowRow {
+    grid-template-columns: 1fr 48px 1fr 48px 1fr 48px 1fr;
+  }
+
+  .flowArrow {
+    display: grid;
+    place-items: center;
+    color: #1b7a6b;
+    font-size: 2rem;
+    font-weight: 700;
+  }
+}

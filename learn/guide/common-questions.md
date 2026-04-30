@@ -69,6 +69,21 @@ JavaScript still matters. It owns:
 
 But the heavy numerical work is handled by the Rust code compiled to WASM.
 
+## Where exactly is the WASM part on the page?
+
+It is not “floating on top of the browser” and it is not “replacing the
+browser.”
+
+It is one module that JavaScript loads and calls when the page needs compute.
+
+So if you open the page:
+
+- HTML defines structure,
+- JavaScript handles interaction,
+- the browser loads the WASM module,
+- exported WASM functions do heavy numerical work,
+- results are returned to JavaScript for display or rendering.
+
 ## Is WebAssembly just “Rust running inside the browser”?
 
 Close, but be a little more precise.
@@ -87,6 +102,12 @@ flowchart TD
 
     A --> B --> C --> D
 ```
+
+If you want one extra detail:
+
+- Rust is the language you write,
+- WASM is the compiled low-level format,
+- JavaScript is the glue and control layer in the browser.
 
 ## Does WASM use OS memory directly?
 
@@ -134,6 +155,20 @@ without cloning the whole field each time.
 
 That is why the JS/WASM boundary is a real systems topic in this project, not a
 small implementation footnote.
+
+## Why not just send everything to the GPU?
+
+Because “send it to the GPU” is not one magic button.
+
+That route would mean choosing and engineering a separate graphics or compute
+pipeline, moving data differently, and changing the scope of the artifact.
+
+For this project, the goal was to show:
+
+- meaningful browser-side compute,
+- careful CPU-side measurement,
+- low-level memory-aware design,
+- a path students can still understand end to end.
 
 ## Does the browser worker create another copy of everything?
 

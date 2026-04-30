@@ -9,7 +9,12 @@ module.exports = {
     {
       type: "category",
       label: "Chapter 2: Computing Ideas",
-      items: ["rust-and-wasm", "computer-science-concepts", "common-questions"]
+      items: [
+        "rust-and-wasm",
+        "cpu-and-gpu",
+        "computer-science-concepts",
+        "common-questions"
+      ]
     },
     {
       type: "category",
