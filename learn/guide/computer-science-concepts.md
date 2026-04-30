@@ -1,9 +1,42 @@
 ---
 sidebar_position: 5
-title: Computer Science Concepts
+title: Data and Solver Basics
 ---
 
-# Computer Science Concepts
+# Data and Solver Basics
+
+This page is not meant to turn you into a systems programmer in one sitting.
+The goal is simpler:
+
+> if you read the codebase after this chapter, the main implementation ideas
+> should feel recognizable instead of mysterious.
+
+## Small Rust Basics You Actually Need Here
+
+You do **not** need all of Rust to read this repo. A few ideas go a long way:
+
+- a `struct` is a named bundle of related data,
+- an `impl` block is where methods for that type are defined,
+- a `Vec<f32>` is a growable array of 32-bit floats,
+- a slice like `&[f32]` is a borrowed view of existing array data,
+- `&mut` means the code is allowed to change the data through that reference.
+
+That is enough to make sense of most of the solver and inverse code.
+
+## Solver State
+
+The main solver object stores:
+
+- grid size,
+- current `u` field,
+- current `v` field,
+- next-step `u` field,
+- next-step `v` field.
+
+So when you see the `GrayScott` struct, think:
+
+> this is the live simulation state plus the scratch space needed for the next
+> update.
 
 ## Structure of Arrays
 
@@ -35,6 +68,9 @@ flowchart TD
 ```
 
 The second layout is often easier to optimize for field-wise numerical work.
+
+In this repo, that idea shows up in the separate `u` and `v` arrays inside the
+solver, rather than storing one giant list of tiny `{u, v}` records.
 
 ## Stencil Computation
 
@@ -68,6 +104,29 @@ In very light math language, the stencil is acting like a local weighted
 "nearby influence" rule. The center cell does not update from nowhere. It
 updates by combining its own old value with information from nearby cells.
 
+## Double Buffering
+
+One subtle but important idea in the solver is **double buffering**.
+
+The code keeps:
+
+- the current field arrays,
+- and separate "next" field arrays.
+
+Why?
+
+Because if you updated the current grid in place, the later cells in the loop
+would start reading partially updated values from earlier cells. That would
+change the meaning of the simulation.
+
+So the safer pattern is:
+
+1. read from the current arrays,
+2. write into separate next arrays,
+3. swap them at the end of the step.
+
+That is exactly what the solver does with `u`, `v`, `next_u`, and `next_v`.
+
 ## Periodic Boundary Conditions
 
 When the solver reaches an edge, it wraps around to the other side.
@@ -79,23 +138,13 @@ That means:
 
 This is called a **periodic boundary**.
 
-## Benchmarking
+In code, this shows up as index wrap logic like:
 
-A benchmark is not just “run it once and see a time.”
+- if `x == 0`, go to the far right for the left neighbor,
+- if `y == 0`, go to the bottom for the upper neighbor.
 
-Good benchmarking asks:
-
-- what exactly is being timed,
-- how many trials were run,
-- whether the result is a median or a single measurement,
-- whether setup costs were included,
-- whether different environments are being mixed unfairly.
-
-This repo takes that seriously:
-
-- Node.js and browser timings are separated,
-- scalar and SIMD are checked against each other,
-- manual browser and headless browser measurements are not merged blindly.
+That is why the simulation behaves like a wrapping surface instead of a hard
+edged picture.
 
 ## Automatic Differentiation
 
@@ -123,22 +172,12 @@ Beginner translation:
 - this repo uses that to ask how the final pattern changes when `F` or `k`
   changes.
 
-## Inverse Problems
+In the inverse code, that derivative information is carried through a small
+dual-number style representation. You do not need to memorize the details, but
+the key idea is:
 
-A forward problem says:
-
-> Given parameters, compute the outcome.
-
-An inverse problem says:
-
-> Given the observed outcome, infer the parameters.
-
-Inverse problems are usually harder, because:
-
-- the mapping can be ambiguous,
-- noise changes the answer,
-- optimization can be unstable,
-- some parameters matter more than others.
+> the program tracks both the normal value and how that value changes with
+> respect to the chosen parameters.
 
 ## SIMD
 
@@ -161,33 +200,27 @@ flowchart LR
 
 That does not remove all overhead, but it can reduce the work per grid row.
 
-## Headless Browser Benchmarking
+In this repo, SIMD is used only where it fits cleanly:
 
-Headless Chrome means Chrome is running without opening the usual visible window.
+- interior rows use 4-wide vector math,
+- awkward boundary handling falls back to the scalar path.
 
-Why use it:
+That is a common engineering pattern:
 
-- easier automation,
-- repeatable scripts,
-- cleaner local benchmarking.
+> optimize the regular hot path, keep the weird edge cases correct.
 
-Why not trust it blindly:
+## Floating-Point Types
 
-- it is still only one browser engine,
-- it may behave differently from an interactive visible browser session,
-- it may not represent mobile performance.
+The solver mostly uses `f32`, which means 32-bit floating-point numbers.
 
-## Sandboxing
+Why not just use integers?
 
-Browsers do not let random page code behave like unrestricted native software.
+Because the simulation values are continuous quantities, not simple counts.
 
-That is a feature, not a weakness.
+Why not always use `f64`?
 
-The browser sandbox means:
+Because `f32` is smaller, often faster, and matches the browser-side
+typed-array path more naturally for this artifact.
 
-- the page cannot freely read arbitrary files,
-- the WASM module cannot freely read arbitrary OS memory,
-- privileged operations must go through browser APIs and permissions.
-
-So “browser-deliverable scientific computing” always lives inside a more
-restricted environment than a normal native binary.
+That is also why comparisons against NumPy `float32` are meaningful in the
+validation scripts.

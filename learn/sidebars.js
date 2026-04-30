@@ -13,6 +13,8 @@ module.exports = {
         "rust-and-wasm",
         "cpu-and-gpu",
         "computer-science-concepts",
+        "code-organization",
+        "trust-and-reproducibility",
         "common-questions"
       ]
     },

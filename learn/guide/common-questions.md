@@ -180,6 +180,22 @@ the important numerical work stays inside the worker-side WASM instance.
 
 That means the main page stays responsive while the heavy optimization runs.
 
+## What is the main thread, really?
+
+The browser main thread is the part of the page that handles visible UI work:
+
+- drawing and layout,
+- clicks and input,
+- scrolling,
+- many on-page updates.
+
+If heavy compute runs there for too long, the page can feel stuck.
+
+That is why the split matters:
+
+- **main thread**: keep the page responsive,
+- **worker**: do the heavier background computation.
+
 ## Why not measure everything only in the browser?
 
 Because different questions need different environments.
@@ -199,6 +215,20 @@ Browser runs are useful for:
 
 If those environments were mixed carelessly, the measurements would become hard
 to interpret.
+
+## Why is Node.js in this repo if the project also cares about browsers?
+
+Node.js gives the repo a convenient non-visual JavaScript runtime for repeated
+WASM and JS benchmarks.
+
+That is useful because it lets the project answer questions like:
+
+- how scalar JS compares to scalar WASM,
+- how scalar WASM compares to SIMD WASM,
+- how much cost belongs to compute itself before visible browser rendering is involved.
+
+So Node.js is not replacing the browser story. It is giving the project a
+cleaner benchmark environment for some runtime comparisons.
 
 ## Why was the inverse problem kept so small?
 

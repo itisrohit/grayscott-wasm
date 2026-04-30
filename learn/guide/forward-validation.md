@@ -19,6 +19,19 @@ That is why the artifact validates:
 This is one of the strongest parts of the repo: it is not just an optimization
 demo.
 
+## What is a reference implementation?
+
+A reference implementation is a version you trust as a comparison point.
+
+In this repo, the Python and NumPy versions play that role for forward
+validation.
+
+That does **not** mean they are magically perfect. It means they are useful
+independent implementations that help answer this question:
+
+> does the main Rust solver behave the same way as another implementation of
+> the same model?
+
 ## What did the validation show?
 
 The full-field comparisons showed very small errors across multiple grids and
@@ -58,6 +71,18 @@ This is a useful comparison because each pair answers a different question:
 - SIMD WASM vs scalar WASM:
   Does low-level vectorization matter?
 
+## Why compare multiple runtimes at all?
+
+Because each runtime answers a different question:
+
+- **native Rust** shows the direct CPU-side implementation cost,
+- **Node.js JavaScript** shows a plain JS baseline,
+- **Node.js WASM** isolates runtime and WASM effects without visible browser rendering,
+- **browser runs** include rendering and UI-related behavior.
+
+So the project is not comparing environments randomly. It is using different
+environments to answer different performance questions.
+
 ## What was the main forward-performance story?
 
 The important story is not “WASM always beats everything.”
@@ -78,3 +103,19 @@ Three things:
 2. Memory layout and vectorization can matter more than hype words.
 3. Good research explains where speedup came from instead of just reporting one
    big number.
+
+## What does “production-relevant grid size” mean here?
+
+Small toy grids are useful for quick checks, but they can hide the real cost
+pattern.
+
+Larger grids are more informative because they stress:
+
+- memory traffic,
+- repeated arithmetic,
+- cache behavior,
+- runtime overheads.
+
+So when the guide says some numbers are more trustworthy at larger grids, it
+means those runs behave more like serious simulation work and less like tiny
+timing noise.

@@ -104,6 +104,11 @@ The measured work falls into five groups:
 5. **Inverse recovery**
    Grid search, noise sensitivity, and browser-side AD-line optimization.
 
+For first-time readers, the inverse part means:
+
+> start with a final pattern and work backward to estimate which parameter
+> values likely produced it.
+
 ## Why students should care
 
 This repo is useful for learning because it shows a full research artifact

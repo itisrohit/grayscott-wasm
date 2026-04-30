@@ -10,7 +10,7 @@
 .hero {
   width: min(980px, calc(100vw - 32px));
   margin: 0 auto;
-  padding: 96px 0 40px;
+  padding: 120px 0 40px;
 }
 
 .eyebrow {
@@ -24,9 +24,9 @@
 
 .hero h1 {
   margin: 0;
-  max-width: 11ch;
-  font-size: clamp(2.7rem, 6vw, 5rem);
-  line-height: 0.96;
+  max-width: 12ch;
+  font-size: clamp(2.5rem, 5.4vw, 4.6rem);
+  line-height: 1.02;
 }
 
 .lead {
@@ -50,14 +50,14 @@
 }
 
 .secondary {
-  color: var(--learn-secondary-text);
+  color: var(--learn-secondary-text) !important;
   border-color: var(--learn-secondary-border);
   background: color-mix(in srgb, var(--learn-panel-bg) 72%, transparent);
 }
 
 .secondary:hover,
 .secondary:focus-visible {
-  color: var(--learn-text-strong);
+  color: var(--learn-text-strong) !important;
   border-color: var(--ifm-color-primary);
   background: color-mix(in srgb, var(--learn-panel-bg) 88%, var(--ifm-color-primary) 12%);
 }

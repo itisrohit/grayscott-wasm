@@ -195,3 +195,36 @@ export function CpuPipelineVisualizer() {
     </Panel>
   );
 }
+
+export function InverseRecoveryVisualizer() {
+  return (
+    <Panel
+      title="The inverse problem in one plain-language picture"
+      text="A forward problem starts with parameters and produces a pattern. An inverse problem starts with the observed pattern and tries to work backward to the hidden parameters that likely produced it."
+    >
+      <div className={styles.compareGrid}>
+        <div className={styles.compareCard}>
+          <div className={styles.compareTitle}>Forward direction</div>
+          <div className={styles.pipelineList}>
+            <div className={styles.pipelineItem}>Choose `F` and `k`.</div>
+            <div className={styles.pipelineArrow}>↓</div>
+            <div className={styles.pipelineItem}>Run the Gray-Scott simulation.</div>
+            <div className={styles.pipelineArrow}>↓</div>
+            <div className={styles.pipelineItem}>Get a final pattern.</div>
+          </div>
+        </div>
+
+        <div className={styles.compareCard}>
+          <div className={styles.compareTitle}>Inverse direction</div>
+          <div className={styles.pipelineList}>
+            <div className={styles.pipelineItem}>Start from the final pattern.</div>
+            <div className={styles.pipelineArrow}>↓</div>
+            <div className={styles.pipelineItem}>Try candidate values of `F` and `k`.</div>
+            <div className={styles.pipelineArrow}>↓</div>
+            <div className={styles.pipelineItem}>Keep the candidates whose simulated pattern matches best.</div>
+          </div>
+        </div>
+      </div>
+    </Panel>
+  );
+}
