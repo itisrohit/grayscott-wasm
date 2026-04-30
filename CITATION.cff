@@ -6,7 +6,7 @@ type: software
 authors:
   - family-names: "Das Gupta"
     given-names: "Rohit Kumar"
-    email: "rohitkumar.20246@lpu.in"
+    email: "dv6510@gmail.com"
 repository-code: "https://github.com/itisrohit/grayscott-wasm"
 url: "https://github.com/itisrohit/grayscott-wasm"
 license: "MIT"
