@@ -25,6 +25,7 @@ module.exports = {
         "math-and-algorithms",
         "algorithm-map",
         "forward-solver-math",
+        "complexity-and-parallelism",
         "inverse-math-and-search"
       ]
     },

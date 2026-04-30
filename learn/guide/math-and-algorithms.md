@@ -114,10 +114,11 @@ There are really three different stories here:
   how the repo compares guessed parameters to a target, differentiates the
   loss, and searches intelligently.
 
-Those are the next three pages:
+Those are the next four pages:
 
 - [Repo Algorithm Map](./algorithm-map)
 - [Forward Solver Math](./forward-solver-math)
+- [Complexity and Parallelism](./complexity-and-parallelism)
 - [Inverse Math and Search](./inverse-math-and-search)
 
 ## What kind of math you should expect here
