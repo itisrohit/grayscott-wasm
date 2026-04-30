@@ -17,6 +17,25 @@ Why it helps:
 - the stencil math stays simple,
 - memory access is friendlier for numerical kernels.
 
+Picture the contrast like this:
+
+```mermaid
+flowchart TD
+    subgraph A[Array of structures]
+      A1["[u,v]"]
+      A2["[u,v]"]
+      A3["[u,v]"]
+      A4["[u,v]"]
+    end
+
+    subgraph B[Structure of arrays]
+      B1["[u,u,u,u]"]
+      B2["[v,v,v,v]"]
+    end
+```
+
+The second layout is often easier to optimize for field-wise numerical work.
+
 ## Stencil Computation
 
 A stencil update means each cell is updated using nearby cells.
@@ -30,6 +49,20 @@ This repo uses a 5-point stencil:
 - down
 
 That is a common pattern in grid-based numerical computing.
+
+You can think of the whole solver as:
+
+```mermaid
+flowchart TD
+    A[For each cell]
+    B[Read nearby values]
+    C[Compute diffusion]
+    D[Compute reaction]
+    E[Write new value]
+    F[Repeat for many time steps]
+
+    A --> B --> C --> D --> E --> F
+```
 
 ## Periodic Boundary Conditions
 
@@ -74,6 +107,10 @@ That is different from:
 The repo uses **forward-mode AD** because the inverse problem only has two main
 parameters: `F` and `k`.
 
+That decision is important. Forward-mode AD is a good fit when the number of
+input parameters is small. If the project tried to infer a huge parameter
+vector, the tradeoffs would change.
+
 ## Inverse Problems
 
 A forward problem says:
@@ -102,6 +139,16 @@ In plain language:
 This repo’s WASM SIMD path uses 4-wide `f32x4` vector operations on interior
 rows. That is why the project has a separate scalar path and SIMD path.
 
+You can picture that idea like this:
+
+```mermaid
+flowchart LR
+    A[Scalar instruction] --> B[One value]
+    C[SIMD instruction] --> D[Four float values]
+```
+
+That does not remove all overhead, but it can reduce the work per grid row.
+
 ## Headless Browser Benchmarking
 
 Headless Chrome means Chrome is running without opening the usual visible window.
@@ -117,3 +164,18 @@ Why not trust it blindly:
 - it is still only one browser engine,
 - it may behave differently from an interactive visible browser session,
 - it may not represent mobile performance.
+
+## Sandboxing
+
+Browsers do not let random page code behave like unrestricted native software.
+
+That is a feature, not a weakness.
+
+The browser sandbox means:
+
+- the page cannot freely read arbitrary files,
+- the WASM module cannot freely read arbitrary OS memory,
+- privileged operations must go through browser APIs and permissions.
+
+So “browser-deliverable scientific computing” always lives inside a more
+restricted environment than a normal native binary.

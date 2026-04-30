@@ -20,6 +20,15 @@ That question matters because many serious differentiable-physics tools live in
 Python ecosystems and often assume heavier numerical or ML stacks. This project
 tests a smaller, CPU-only, browser-deliverable path.
 
+The CPU focus is a scope choice, not an anti-GPU claim. GPUs are extremely good
+at large parallel numerical workloads. The point here was to ask:
+
+> How far can a compact CPU-side browser artifact go before you need heavier
+> infrastructure?
+
+That makes the result easier to reproduce for students and easier to inspect as
+systems work.
+
 ## What the project is not claiming
 
 The artifact does **not** claim:
@@ -60,6 +69,24 @@ The repo now contains:
 - a browser inverse-recovery page,
 - a Web Worker path so the browser inverse loop does not block the main page,
 - a paper, experiment log, and reproducibility docs.
+
+## How the whole system fits together
+
+```mermaid
+flowchart TD
+    A[Research question]
+    B[Build a trustworthy forward solver]
+    C[Validate against references]
+    D[Expose the solver to WASM]
+    E[Benchmark execution paths]
+    F[Run inverse recovery]
+    G[Write up measured limits]
+
+    A --> B --> C --> D --> E --> F --> G
+```
+
+In plain language, the benchmark stage here covers native Rust, JavaScript,
+scalar WASM, SIMD WASM, and browser-side execution paths.
 
 ## What was measured
 

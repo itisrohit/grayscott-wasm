@@ -14,11 +14,16 @@ const config = {
 
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
+  markdown: {
+    mermaid: true
+  },
 
   i18n: {
     defaultLocale: "en",
     locales: ["en"]
   },
+
+  themes: ["@docusaurus/theme-mermaid"],
 
   presets: [
     [
@@ -70,6 +75,9 @@ const config = {
     },
     prism: {
       additionalLanguages: ["rust", "python", "bash", "json"]
+    },
+    mermaid: {
+      theme: { light: "neutral", dark: "dark" }
     }
   }
 };

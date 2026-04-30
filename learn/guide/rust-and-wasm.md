@@ -31,6 +31,29 @@ For this project, that means:
 - JavaScript becomes the UI and orchestration layer rather than the only compute
   layer.
 
+## What does “running in the browser” actually mean?
+
+It does **not** mean the Rust code becomes ordinary JavaScript source.
+
+It means:
+
+```mermaid
+flowchart TD
+    A[Rust source]
+    B[Compiled into a WASM module]
+    C[Loaded by JavaScript]
+    D[Executed inside the browser runtime]
+
+    A --> B --> C --> D
+```
+
+So the browser app still has multiple layers:
+
+- HTML for the page structure,
+- JavaScript for UI and browser APIs,
+- WASM for heavy numerical work,
+- Rust as the source language behind that WASM module.
+
 ## Why not just use JavaScript?
 
 You could. In fact, this repo includes a scalar JS baseline.
@@ -54,6 +77,56 @@ WASM does not replace the whole app. Instead:
 
 That boundary matters because copying large arrays back and forth can be slow.
 This repo explicitly measures and designs around that issue.
+
+## Where is the memory actually living?
+
+This is an important beginner question.
+
+At the machine level, the operating system gives memory to the browser process.
+Inside that browser process, the JavaScript engine and the WASM runtime manage
+their own memory regions.
+
+You can picture it like this:
+
+```mermaid
+flowchart TD
+    A[Operating system RAM]
+    B[Browser process]
+    C[JavaScript-managed memory]
+    D[WebAssembly linear memory]
+
+    A --> B
+    B --> C
+    B --> D
+```
+
+So WASM is using real machine memory, but it is doing so through the browser's
+runtime and safety boundaries, not by reading arbitrary OS memory directly.
+
+## What is WebAssembly linear memory?
+
+Think of it as a large byte buffer owned by the WASM module.
+
+The Rust code stores arrays in that memory. JavaScript can then look at parts
+of the same buffer through typed arrays such as `Float32Array` or
+`Uint8ClampedArray`.
+
+That is how this project avoids unnecessary copies for large simulation fields.
+
+## Why is CPU-first still a reasonable choice?
+
+Because the artifact question here is about portability and inspectability as
+much as raw speed.
+
+CPU-first means:
+
+- the same logic runs natively and in-browser,
+- the hardware assumptions stay modest,
+- debugging and validation stay simpler,
+- students can reason about the path more directly.
+
+GPU compute is not “bad” or “less real.” It is simply a different engineering
+tradeoff with more infrastructure and more backend complexity.
 
 ## What is zero-copy access here?
 
@@ -85,3 +158,18 @@ In this repo:
 
 That is a classic browser systems pattern: keep the UI responsive by moving
 compute elsewhere.
+
+## A full browser-side flow diagram
+
+```mermaid
+flowchart TD
+    A[User clicks Run]
+    B[Main page JavaScript reads inputs]
+    C[Message sent to inverse_worker.js]
+    D[Worker loads or uses the WASM module]
+    E[Rust solver and optimizer run]
+    F[Worker sends JSON results back]
+    G[Main page updates tables and status]
+
+    A --> B --> C --> D --> E --> F --> G
+```
