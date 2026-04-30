@@ -11,14 +11,18 @@ Use this directory as the navigation layer for the research artifact.
 3. [plan.md](plan.md)
    Long-form research framing, current artifact status, and remaining optional
    work.
-4. [manualcheck-browser-render.md](manualcheck-browser-render.md)
+4. [reproducibility.md](reproducibility.md)
+   Paper-oriented reproduction path for the current benchmark and browser tables.
+5. [manualcheck-browser-render.md](manualcheck-browser-render.md)
    Manual and headless procedures for the browser render benchmark.
-5. [research-directions.md](research-directions.md)
+6. [research-directions.md](research-directions.md)
    Literature-backed ideas for stronger future work.
 
 ## What To Open For Specific Tasks
 
 - Reproduce measured results:
+  [reproducibility.md](reproducibility.md)
+- Inspect the full chronological log:
   [experiment-log.md](experiment-log.md)
 - Understand the paper framing and current completion status:
   [plan.md](plan.md)

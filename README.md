@@ -254,10 +254,12 @@ cargo bench --bench inverse_overhead
 ## Documentation
 
 - [docs/README.md](docs/README.md)
+- [docs/reproducibility.md](docs/reproducibility.md)
 - [docs/experiment-log.md](docs/experiment-log.md)
 - [docs/manualcheck-browser-render.md](docs/manualcheck-browser-render.md)
 - [docs/plan.md](docs/plan.md)
 - [docs/research-directions.md](docs/research-directions.md)
+- [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Notes
 
