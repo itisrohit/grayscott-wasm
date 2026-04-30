@@ -10,8 +10,11 @@ Current status:
 - Correctness is validated against NumPy `float32`.
 - Scalar WASM is only about `1.22x-1.27x` faster than scalar JS in Node.js for the
   current benchmark.
-- The next improvements should target either research strength or measured
-  performance. Do not oversell scalar WASM speed.
+- A separate WASM SIMD path is now implemented and measured at `6.98x-8.57x`
+  over scalar WASM in the Node.js benchmark.
+- The browser inverse page now runs the optimizer in `www/inverse_worker.js`.
+- The next improvements should target either stronger publication evidence or
+  broader browser validation, not basic missing implementation.
 
 ---
 
@@ -120,10 +123,11 @@ Sources:
 
 ---
 
-## Best Next Performance Upgrade: WASM SIMD Interior Kernel
+## Performance Upgrade Notes: WASM SIMD Interior Kernel
 
-The measured scalar WASM speedup over JS is modest. The next credible performance
-step is a dedicated SIMD kernel for the interior rows/columns.
+The measured scalar WASM speedup over JS is modest. A dedicated SIMD kernel for
+the interior rows/columns is now implemented, so the focus here is on how to
+interpret or extend that result rather than whether to build it.
 
 Use WebAssembly SIMD only after preserving scalar correctness:
 
@@ -144,11 +148,13 @@ Implementation direction:
   - right: `u[i+1..i+5]`
   - up/down: same x range in neighboring rows.
 
-Expected result:
+Measured result:
 
-- Do not assume 4x speedup. Memory bandwidth, boundary handling, and wasm engine
-  codegen will limit gains.
-- A credible goal is a measured `1.2x-2.5x` scalar-WASM speedup for larger grids.
+- Do not assume 4x speedup from lane width alone. Memory bandwidth, boundary
+  handling, and wasm engine codegen dominate.
+- This repo measured `6.98x-8.57x` over scalar WASM in the current Node.js path,
+  so any future extension should explain why that number is higher than the
+  conservative pre-implementation expectation.
 
 Sources:
 

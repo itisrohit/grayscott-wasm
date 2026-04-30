@@ -4,7 +4,16 @@ This file records measured results and validation gates as the research artifact
 evolves. Keep it factual: commands, environment, metrics, tolerances, and observed
 numbers.
 
-Current date: 2026-04-26
+Reading note:
+
+- This file is chronological.
+- The opening sections describe the earliest scalar baseline.
+- Later sections contain the current WASM, SIMD, browser, AD, and inverse
+  measurements.
+- If you want a navigation map before reading this file end to end, start with
+  [README.md](../README.md) and [docs/README.md](README.md).
+
+Current date: 2026-04-30
 
 ---
 
@@ -210,15 +219,12 @@ Passed:
   `128 x 128`, `256 x 256`, and `512 x 512` at `100`, `500`, and `1000`
   steps.
 
-Not yet done:
+Historical note:
 
-- Native Rust performance benchmark.
-- JavaScript baseline.
-- WASM build.
-- SIMD build.
-- Automatic differentiation.
-- Gradient checks.
-- Inverse recovery beyond exact-grid sanity baselines.
+- The section above records the earliest baseline checkpoint only.
+- The rest of this file includes the later Rust, JS, WASM, SIMD, browser, AD,
+  and inverse-recovery measurements that were added after the baseline was
+  established.
 
 ---
 

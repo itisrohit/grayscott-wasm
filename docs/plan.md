@@ -122,9 +122,8 @@ Current paper status:
 - Figures live in `paper/figures/`.
 - A compiled Overleaf PDF has been added locally at
   `paper/grayscott_wasm_IEEE_Journal_Paper.pdf`.
-- The tagged paper scope is scalar Rust/WASM plus forward-mode AD. SIMD was added
-  after `paper-draft-v1` and is now a next-paper/update result, not part of the
-  current compiled PDF.
+- The current paper source and compiled PDF include the SIMD and browser Web
+  Worker updates.
 - The repository URL is included in the paper:
   `https://github.com/itisrohit/grayscott-wasm`.
 
@@ -888,29 +887,49 @@ grayscott-wasm/
     lib.rs
     solver.rs
     inverse.rs
+    wasm.rs
+    bin/
   www/
-    index.html
-    main.js
-    worker.js
+    render_bench.html
+    render_bench.js
+    render_bench.css
+    inverse.html
+    inverse.js
+    inverse.css
+    inverse_worker.js
   benches/
     inverse_overhead.rs
   reference/
-    scalar_reference.py
-    numpy_reference.py
+    reference_scalar.py
+    reference_numpy.py
   docs/
+    README.md
     experiment-log.md
     manualcheck-browser-render.md
     plan.md
+    research-directions.md
   tools/
     bench_forward_js.mjs
     bench_forward_wasm.mjs
+    bench_forward_wasm_simd.mjs
     bench_grayscale_render.mjs
+    build_wasm_node.sh
+    build_wasm_node_simd.sh
+    build_wasm_web.sh
+    check_js.sh
+    check_wasm_node.mjs
+    check_wasm_simd.mjs
+    check_wasm_views.mjs
     full_field_metrics.py
+    quality.sh
+    run_browser_inverse_bench.mjs
+    run_browser_render_bench.mjs
     wasm_full_field_metrics.py
   paper/
     figures/
     main.tex
     references.bib
+    grayscott_wasm_IEEE_Journal_Paper.pdf
   README.md
 ```
 

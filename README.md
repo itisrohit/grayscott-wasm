@@ -1,32 +1,34 @@
 # grayscott-wasm
 
-Research artifact for a Rust/WebAssembly Gray-Scott reaction-diffusion solver.
+Rust/WebAssembly research artifact for a differentiable Gray-Scott
+reaction-diffusion solver, browser render benchmarks, and small-parameter
+inverse recovery.
 
-Current milestone: native scalar Rust solver plus a float32 NumPy reference.
+## What This Repo Contains
 
-## Commands
+- Native Rust scalar solver.
+- Python and NumPy references for correctness checks.
+- Node.js WASM and WASM SIMD benchmarks.
+- Browser render benchmark page.
+- Browser inverse recovery page running the optimizer in a module Web Worker.
+- Experiment logs, paper source, and the latest compiled PDF.
 
-Set up Python tools:
+Latest paper PDF:
+
+- [grayscott_wasm_IEEE_Journal_Paper.pdf](paper/grayscott_wasm_IEEE_Journal_Paper.pdf)
+
+## Start Here
+
+Set up Python tooling:
 
 ```bash
 uv sync
 ```
 
-Install git hooks:
+Install local git hooks:
 
 ```bash
 bash tools/install-hooks.sh
-```
-
-Run validation:
-
-```bash
-cargo test
-.venv/bin/python reference/reference_scalar.py --width 64 --height 64 --steps 100
-cargo run --example summary
-.venv/bin/python tools/compare_scalar_reference.py
-.venv/bin/python tools/compare_numpy_reference.py
-.venv/bin/python tools/full_field_metrics.py --width 64 --height 64 --steps 100 500 1000
 ```
 
 Run the full local quality gate:
@@ -35,13 +37,138 @@ Run the full local quality gate:
 bash tools/quality.sh
 ```
 
-Run the native scalar forward benchmark:
+That is the best first check if you want to confirm the repo is healthy before
+running individual experiments.
+
+## First Navigation Path
+
+If you are new to this repo, read in this order:
+
+1. This file for setup and common commands.
+2. [docs/README.md](docs/README.md) for the documentation map.
+3. [docs/experiment-log.md](docs/experiment-log.md) for measured results.
+4. [paper/main.tex](paper/main.tex) for the paper source.
+
+## Repository Map
+
+- `src/`
+  Native solver, AD/inverse logic, and WASM exports.
+- `src/bin/`
+  Reproducible CLI experiments and benchmarks.
+- `reference/`
+  Python and NumPy validation references.
+- `tools/`
+  Build scripts, quality checks, and browser/headless benchmark runners.
+- `www/`
+  Browser pages:
+  `render_bench.html`, `inverse.html`, and `inverse_worker.js`.
+- `docs/`
+  Plan, experiment log, manual browser-check notes, research directions.
+- `paper/`
+  IEEE paper source, bibliography, figures, and compiled PDF.
+
+## Most Common Tasks
+
+### Validate The Solver
+
+```bash
+cargo test
+.venv/bin/python tools/compare_scalar_reference.py
+.venv/bin/python tools/compare_numpy_reference.py
+.venv/bin/python tools/full_field_metrics.py --width 64 --height 64 --steps 100 500 1000
+```
+
+### Build WASM
+
+```bash
+bash tools/build_wasm_node.sh
+bash tools/build_wasm_web.sh
+```
+
+### Check Node.js WASM
+
+```bash
+node tools/check_wasm_node.mjs
+node tools/check_wasm_views.mjs
+.venv/bin/python tools/wasm_full_field_metrics.py --width 64 --height 64 --steps 100
+```
+
+### Benchmark Forward Performance
+
+Native Rust:
 
 ```bash
 cargo run --release --bin bench_forward -- --grids 128,256,512 --steps 500 --trials 5
 ```
 
-Run the inverse-recovery grid-search baseline:
+Scalar JavaScript:
+
+```bash
+node tools/bench_forward_js.mjs --grids 128,256,512 --steps 500 --trials 5
+```
+
+Scalar WASM:
+
+```bash
+node tools/bench_forward_wasm.mjs --grids 128,256,512 --steps 500 --trials 5
+```
+
+SIMD WASM:
+
+```bash
+bash tools/build_wasm_node_simd.sh
+node tools/check_wasm_simd.mjs
+node tools/bench_forward_wasm_simd.mjs --grids 128,256,512 --steps 500 --trials 5
+```
+
+### Run Browser Render Benchmark
+
+```bash
+bash tools/build_wasm_web.sh
+python3 -m http.server 8000
+```
+
+Then open:
+
+```text
+http://localhost:8000/www/render_bench.html
+```
+
+Repeatable headless run:
+
+```bash
+node tools/run_browser_render_bench.mjs --grid 512 --frames 300 --steps 250
+```
+
+Manual browser-check procedure:
+
+- [docs/manualcheck-browser-render.md](docs/manualcheck-browser-render.md)
+
+### Run Browser Inverse Recovery
+
+```bash
+bash tools/build_wasm_web.sh
+python3 -m http.server 8000
+```
+
+Then open:
+
+```text
+http://localhost:8000/www/inverse.html
+```
+
+The heavy optimizer call runs in `www/inverse_worker.js`, not on the main page
+thread.
+
+Repeatable headless run:
+
+```bash
+node tools/run_browser_inverse_bench.mjs --grid 64 --steps 100 --iterations 8
+```
+
+### Run Inverse-Recovery CLI Experiments
+
+Grid-search baseline:
 
 ```bash
 cargo run --release --bin inverse_grid -- \
@@ -51,7 +178,7 @@ cargo run --release --bin inverse_grid -- \
   --kill-min 0.060 --kill-max 0.065 --kill-count 11
 ```
 
-Run multi-regime inverse recovery:
+Multi-regime recovery:
 
 ```bash
 cargo run --release --bin inverse_regimes -- \
@@ -60,7 +187,7 @@ cargo run --release --bin inverse_regimes -- \
   --kill-min 0.055 --kill-max 0.070 --kill-count 31
 ```
 
-Run inverse recovery under deterministic target noise:
+Noise sweep:
 
 ```bash
 cargo run --release --bin inverse_noise -- \
@@ -71,7 +198,7 @@ cargo run --release --bin inverse_noise -- \
   --kill-min 0.055 --kill-max 0.070 --kill-count 31
 ```
 
-Compare grid search with the AD optimizer under noise:
+AD optimizer vs grid search under noise:
 
 ```bash
 cargo run --release --bin inverse_ad_opt -- \
@@ -86,7 +213,9 @@ cargo run --release --bin inverse_ad_opt -- \
   --kill-min 0.055 --kill-max 0.070 --kill-count 31
 ```
 
-Run the inverse finite-difference gradient baseline:
+### Run Gradient Checks And Overhead Benchmarks
+
+Finite-difference gradient baseline:
 
 ```bash
 cargo run --release --bin inverse_grad -- \
@@ -96,17 +225,7 @@ cargo run --release --bin inverse_grad -- \
   --epsilon 0.0001
 ```
 
-Run finite-difference gradient descent:
-
-```bash
-cargo run --release --bin inverse_opt -- \
-  --width 64 --height 64 --steps 100 \
-  --target-feed 0.06055 --target-kill 0.06245 \
-  --initial-feed 0.060 --initial-kill 0.063 \
-  --learning-rate 0.0001 --epsilon 0.0001 --iterations 8
-```
-
-Compare forward-mode AD gradients against finite differences:
+Forward-mode AD gradient check:
 
 ```bash
 cargo run --release --bin inverse_ad -- \
@@ -116,7 +235,7 @@ cargo run --release --bin inverse_ad -- \
   --epsilon 0.0001
 ```
 
-Benchmark inverse-gradient overhead:
+Inverse-gradient overhead:
 
 ```bash
 cargo run --release --bin bench_inverse -- \
@@ -126,105 +245,24 @@ cargo run --release --bin bench_inverse -- \
   --epsilon 0.0001
 ```
 
-Run Criterion statistical benchmarks for inverse-gradient overhead:
+Criterion benchmark:
 
 ```bash
 cargo bench --bench inverse_overhead
 ```
 
-Run the JavaScript scalar forward benchmark:
+## Documentation
 
-```bash
-node tools/bench_forward_js.mjs --grids 128,256,512 --steps 500 --trials 5
-```
+- [docs/README.md](docs/README.md)
+- [docs/experiment-log.md](docs/experiment-log.md)
+- [docs/manualcheck-browser-render.md](docs/manualcheck-browser-render.md)
+- [docs/plan.md](docs/plan.md)
+- [docs/research-directions.md](docs/research-directions.md)
 
-Build the Node.js WASM package:
+## Notes
 
-```bash
-bash tools/build_wasm_node.sh
-```
-
-Build the browser WASM package:
-
-```bash
-bash tools/build_wasm_web.sh
-```
-
-Check and benchmark the Node.js WASM package:
-
-```bash
-node tools/check_wasm_node.mjs
-node tools/check_wasm_views.mjs
-node tools/bench_forward_wasm.mjs --grids 128,256,512 --steps 500 --trials 5
-.venv/bin/python tools/wasm_full_field_metrics.py --width 64 --height 64 --steps 100 500 1000
-node tools/bench_wasm_boundary.mjs --grids 64,128,256 --steps 500 --trials 7
-node tools/bench_wasm_views.mjs --grids 128,256,512 --trials 1000
-node tools/bench_grayscale_render.mjs --grids 128,256,512 --trials 200
-```
-
-Build, validate, and benchmark the Node.js WASM SIMD package:
-
-```bash
-bash tools/build_wasm_node_simd.sh
-node tools/check_wasm_simd.mjs
-node tools/bench_forward_wasm_simd.mjs --grids 128,256,512 --steps 500 --trials 5
-```
-
-Run the browser render benchmark:
-
-```bash
-bash tools/build_wasm_web.sh
-python3 -m http.server 8000
-```
-
-Then open:
-
-```text
-http://localhost:8000/www/render_bench.html
-```
-
-Run the same browser render benchmark through local headless Chrome:
-
-```bash
-node tools/run_browser_render_bench.mjs --grid 512 --frames 300 --steps 250
-```
-
-Run the browser inverse recovery page:
-
-```bash
-bash tools/build_wasm_web.sh
-python3 -m http.server 8000
-```
-
-Then open:
-
-```text
-http://localhost:8000/www/inverse.html
-```
-
-The inverse page runs the optimizer in a module Web Worker.
-
-Run the browser inverse recovery page through local headless Chrome:
-
-```bash
-node tools/run_browser_inverse_bench.mjs --grid 64 --steps 100 --iterations 8
-```
-
-Check all JavaScript files:
-
-```bash
-bash tools/check_js.sh
-```
-
-Run the same gate through pre-commit:
-
-```bash
-PRE_COMMIT_HOME=.pre-commit-cache \
-.venv/bin/pre-commit run --all-files
-```
-
-Run the NumPy reference directly:
-
-```bash
-.venv/bin/python reference/reference_numpy.py --width 64 --height 64 --steps 100
-```
+- The browser render numbers include both interactive Chrome measurements and
+  headless Chrome measurements. Keep those tables separate.
+- The browser inverse timings currently come from headless Chrome on a single
+  machine. Interactive and cross-browser checks are still optional follow-up
+  work, not missing implementation.
