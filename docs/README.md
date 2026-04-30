@@ -34,11 +34,17 @@ Use this directory as the navigation layer for the research artifact.
   [../paper/main.tex](../paper/main.tex)
 - View the latest compiled paper PDF:
   [../paper/grayscott_wasm_IEEE_Journal_Paper.pdf](../paper/grayscott_wasm_IEEE_Journal_Paper.pdf)
+- Open the student-facing learning site source:
+  [../learn](../learn)
+- Read the learning-site local guide:
+  [../learn/README.md](../learn/README.md)
 
 ## Current State
 
 - Core implementation is complete for the present Rust/WASM paper scope.
 - SIMD results are implemented and measured.
 - Browser inverse recovery runs through a module Web Worker.
+- The chapter-based learning site in `learn/` now builds as a static GitHub
+  Pages site.
 - Remaining work is mostly paper/submission polish or optional cross-browser
   measurements.

@@ -261,6 +261,32 @@ cargo bench --bench inverse_overhead
 - [docs/research-directions.md](docs/research-directions.md)
 - [CONTRIBUTING.md](CONTRIBUTING.md)
 
+## Learning Site
+
+A chapter-based Docusaurus site for students and first-time readers lives in
+`learn/`.
+
+Use Node 22 for the learning site. If you use `nvm`:
+
+```bash
+nvm use
+```
+
+Local development:
+
+```bash
+cd learn
+npm install
+npm run start
+```
+
+Production build:
+
+```bash
+cd learn
+npm run build
+```
+
 ## Notes
 
 - The browser render numbers include both interactive Chrome measurements and

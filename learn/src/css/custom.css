@@ -1,0 +1,35 @@
+:root {
+  --ifm-color-primary: #146f64;
+  --ifm-color-primary-dark: #125f56;
+  --ifm-color-primary-darker: #10584f;
+  --ifm-color-primary-darkest: #0d483f;
+  --ifm-color-primary-light: #168174;
+  --ifm-color-primary-lighter: #198a7d;
+  --ifm-color-primary-lightest: #1d9b8d;
+  --ifm-code-font-size: 95%;
+  --ifm-heading-font-family: Georgia, "Times New Roman", serif;
+  --ifm-font-family-base: "Source Sans 3", "Segoe UI", sans-serif;
+  --ifm-background-color: #f5f8fb;
+}
+
+.navbar {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 252, 247, 0.92);
+}
+
+.footer {
+  --ifm-footer-background-color: #16222c;
+}
+
+.theme-doc-markdown header h1 {
+  line-height: 1.02;
+}
+
+.theme-doc-markdown p,
+.theme-doc-markdown li {
+  line-height: 1.72;
+}
+
+.theme-doc-sidebar-item-category-level-1 > .menu__list-item-collapsible {
+  font-weight: 700;
+}
