@@ -90,29 +90,41 @@ module.exports = async function createConfigAsync() {
         style: "dark",
         links: [
           {
-            title: "Read",
+            title: "Artifact",
             items: [
-              { label: "Guide", to: "/guide/intro" },
               {
                 label: "Paper PDF",
                 href: "https://github.com/itisrohit/grayscott-wasm/blob/main/paper/grayscott_wasm_IEEE_Journal_Paper.pdf"
+              },
+              {
+                label: "Repository",
+                href: "https://github.com/itisrohit/grayscott-wasm"
               }
             ]
           },
           {
-            title: "Artifact",
+            title: "Records",
             items: [
-              {
-                label: "Repository",
-                href: "https://github.com/itisrohit/grayscott-wasm"
-              },
               {
                 label: "Experiment Log",
                 href: "https://github.com/itisrohit/grayscott-wasm/blob/main/docs/experiment-log.md"
+              },
+              {
+                label: "Reproducibility Checklist",
+                href: "https://github.com/itisrohit/grayscott-wasm/blob/main/docs/reproducibility.md"
               }
             ]
+          },
+          {
+            title: "Site",
+            items: [
+              { label: "Guide", to: "/guide/intro" },
+              { label: "Glossary", to: "/guide/glossary" }
+            ]
           }
-        ]
+        ],
+        copyright:
+          "Gray-Scott Research Guide. A student-facing guide to the grayscott-wasm artifact."
       },
       prism: {
         additionalLanguages: ["rust", "python", "bash", "json"]

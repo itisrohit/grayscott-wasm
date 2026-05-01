@@ -60,7 +60,40 @@
 }
 
 .footer {
-  --ifm-footer-background-color: #16222c;
+  --ifm-footer-background-color: #101821;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.footer__links {
+  margin-bottom: 1.4rem;
+}
+
+.footer__title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #8fb4aa;
+}
+
+.footer__item {
+  margin-top: 0.35rem;
+}
+
+.footer__link-item {
+  color: #d7e2ec;
+  opacity: 0.92;
+}
+
+.footer__link-item:hover,
+.footer__link-item:focus {
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.footer__copyright {
+  color: #97aab9;
+  font-size: 0.92rem;
 }
 
 .theme-doc-markdown header h1 {

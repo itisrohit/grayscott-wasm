@@ -43,6 +43,80 @@ The guide is split into chapters.
 - **Experiments** explains the benchmark and inverse-recovery results.
 - **Use It Yourself** explains how to rerun the artifact and decode the terms.
 
+## Recommended reading order
+
+If you are completely new, do not read the guide like a paper from front to
+back without a plan.
+
+Use one of these routes:
+
+### Route A: absolute beginner
+
+1. **Big Picture**
+2. **Gray-Scott Basics**
+3. **Rust and WebAssembly**
+4. **CPU and GPU Thinking**
+5. **Common Questions**
+6. **Experiments**
+7. **Use It Yourself**
+
+This route is best if words like PDE, WASM, SIMD, and inverse problem still
+feel unfamiliar.
+
+### Route B: technical reader
+
+1. **Big Picture**
+2. **Math and Algorithms**
+3. **Experiments**
+4. **Computing Ideas**
+5. **Use It Yourself**
+
+This route is better if you already know the vocabulary and want the technical
+argument first.
+
+### Route C: I only care about rerunning it
+
+1. **Use It Yourself**
+2. **Experiments**
+3. **Glossary**
+
+This route is for readers who mainly want to reproduce commands and interpret
+the resulting numbers.
+
+## What each chapter is trying to do
+
+Each chapter has a different job:
+
+- **Chapter 1** gives the research question and the physical intuition.
+- **Chapter 2** explains the software and systems ideas the repo relies on.
+- **Chapter 3** explains the math and algorithms in the same order they matter
+  in the code.
+- **Chapter 4** explains the evidence, measured tables, and tradeoffs.
+- **Chapter 5** tells you how to rerun the artifact and decode the repeated
+  terms.
+
+That division is deliberate. It keeps the guide from mixing:
+
+- explanation,
+- derivation,
+- benchmark interpretation,
+- and practical reproduction steps
+
+all on the same page.
+
+## What to do when a page feels too technical
+
+Use the guide sideways, not only downward.
+
+If a page becomes too technical:
+
+- jump to **Glossary** for the terms,
+- jump to **Common Questions** for simpler framing,
+- return to **Math and Algorithms** only after the basic picture is clear.
+
+This is a teaching guide, not an exam. You are allowed to move between
+chapters.
+
 ## The short version
 
 This project asks a focused question:
