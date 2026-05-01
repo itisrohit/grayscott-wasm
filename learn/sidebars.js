@@ -32,7 +32,12 @@ module.exports = {
     {
       type: "category",
       label: "Chapter 4: Experiments",
-      items: ["forward-validation", "inverse-recovery", "browser-and-simd"]
+      items: [
+        "experiment-map",
+        "forward-validation",
+        "inverse-recovery",
+        "browser-and-simd"
+      ]
     },
     {
       type: "category",
