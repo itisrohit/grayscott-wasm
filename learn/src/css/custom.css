@@ -29,6 +29,7 @@
   --learn-eyebrow: #a24e12;
   --learn-secondary-text: #17354d;
   --learn-secondary-border: #8ca3b7;
+  --learn-site-bg: #101821;
 }
 
 [data-theme="dark"] {
@@ -52,6 +53,13 @@
   --learn-eyebrow: #ffbd73;
   --learn-secondary-text: #e6edf5;
   --learn-secondary-border: #60758a;
+  --learn-site-bg: #0c141c;
+}
+
+html,
+body,
+#__docusaurus {
+  background: var(--learn-site-bg);
 }
 
 .navbar {
