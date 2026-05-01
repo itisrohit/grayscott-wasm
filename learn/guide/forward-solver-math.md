@@ -299,6 +299,61 @@ The tradeoff is the classic one:
 This repo accepts that tradeoff because the research question is about a
 portable, inspectable computational stack, not maximum numerical sophistication.
 
+## A stability intuition without going too far
+
+A full numerical-stability proof is outside the scope of this guide, but one
+important idea should still be stated clearly:
+
+> explicit methods can become unstable if the time step is too aggressive
+> relative to the spatial update scale.
+
+In a pure diffusion setting, explicit methods are often discussed using a
+CFL-like or diffusion-stability restriction. The exact safe region depends on:
+
+- the stencil,
+- the grid spacing,
+- the diffusion constants,
+- and the time step.
+
+This repo does not build a full theoretical stability analysis around those
+constants because:
+
+- the implementation uses a fixed chosen setup,
+- the main goal is reproducible comparison across runtimes,
+- and the experiments validate finite, sensible behavior directly.
+
+But the underlying numerical lesson is still worth knowing:
+
+- a PDE discretization is not only about correctness of formulas,
+- it is also about choosing update scales that keep repeated stepping well
+  behaved.
+
+That is one reason the repo does not sweep arbitrary huge values of $\Delta t$.
+
+## Why consistency matters more here than formal order analysis
+
+There are many ways to discuss a forward solver mathematically:
+
+- local truncation error,
+- convergence order,
+- von Neumann stability,
+- modified-equation analysis.
+
+Those are all real topics. They are just not the main decision point in this
+repo.
+
+Here the strongest practical requirement is:
+
+> the same discretization must behave consistently across scalar Rust, WASM,
+> SIMD, and browser-facing paths.
+
+So this chapter emphasizes:
+
+- the actual implemented stencil,
+- the actual time update,
+- the actual memory and boundary model,
+- and the consequences of those choices.
+
 ## Why the data layout is split into separate arrays
 
 The solver stores:

@@ -302,8 +302,8 @@ explicitly with a small `Dual2` type.
 Each value carries:
 
 - the ordinary field value,
-- derivative with respect to `F`,
-- derivative with respect to `k`.
+- derivative with respect to $F$,
+- derivative with respect to $k$.
 
 So one dual number is:
 
@@ -384,6 +384,40 @@ At code level, the key design choice is:
 - accumulate both value and derivative information together
 
 That makes the AD implementation small enough to audit directly.
+
+## A curvature intuition: what the Hessian would mean here
+
+The gradient tells you the local downhill direction. But it does not tell you
+the full local shape of the loss surface.
+
+That fuller second-order shape is captured by the Hessian:
+
+```math
+H(F,k) =
+\begin{bmatrix}
+\dfrac{\partial^2 L}{\partial F^2} & \dfrac{\partial^2 L}{\partial F \partial k} \\
+\dfrac{\partial^2 L}{\partial k \partial F} & \dfrac{\partial^2 L}{\partial k^2}
+\end{bmatrix}
+```
+
+You do not need the repo to compute this matrix explicitly to understand why it
+matters.
+
+It answers questions like:
+
+- is the loss valley narrow or wide,
+- do $F$ and $k$ interact strongly,
+- does one direction curve much more sharply than the other,
+- should a fixed learning rate be trusted locally.
+
+This is why backtracking helps even without an explicit Hessian:
+
+- the gradient gives a local direction,
+- the line search checks whether the proposed step behaves well in the real
+  curved loss surface.
+
+So backtracking is a simple way to respect curvature without implementing a
+full second-order optimizer.
 
 ## Algorithm 4: gradient descent
 
@@ -491,6 +525,13 @@ condition says:
 > accept the step only if the actual decrease is large enough relative to what
 > the local slope predicted.
 
+That is the deeper optimization idea:
+
+- the gradient is a first-order model,
+- the real loss surface is nonlinear,
+- Armijo backtracking checks whether the first-order picture was locally good
+  enough.
+
 ## Why noise is part of the algorithm story
 
 `add_uniform_noise` exists because a perfectly clean target can make inverse
@@ -521,6 +562,99 @@ If `r` is a pseudorandom value in `[0, 1)`, the noise rule is:
 ```
 
 So the perturbation is uniform in `[-amplitude, +amplitude]` before clamping.
+
+## What identifiability means in this repo
+
+An inverse problem is not only about optimization. It is also about
+identifiability.
+
+Identifiability asks:
+
+> does the observed data contain enough information to distinguish the unknown
+> parameters clearly?
+
+In this repo, that means asking whether the final field gives enough signal to
+separate:
+
+- one candidate $F, k$ pair,
+- from another nearby $F, k$ pair.
+
+This matters because two different parameter pairs can sometimes produce
+visually similar or numerically close final patterns.
+
+That is one reason the repo:
+
+- uses a known target,
+- measures actual loss values,
+- compares grid search and gradient methods,
+- and studies noise sensitivity.
+
+Those are not only optimization experiments. They are also indirect checks on
+how identifiable the two-parameter problem is under the chosen setup.
+
+## What would happen if the parameter count grew
+
+This repo keeps only two unknown parameters. That makes the inverse problem much
+cleaner than a larger one.
+
+If the parameter count grew, several things would change at once:
+
+### 1. Search-space size would explode
+
+Grid search would become unrealistic quickly because the candidate lattice would
+grow combinatorially.
+
+### 2. Forward-mode AD would become less attractive
+
+Forward-mode AD carries one tangent channel per parameter direction. So adding
+many parameters increases:
+
+- arithmetic overhead,
+- memory overhead,
+- implementation burden.
+
+### 3. Identifiability would usually get worse
+
+More unknowns means more ways for different parameter combinations to explain
+similar outputs. That can flatten parts of the loss surface or create more
+ambiguous valleys.
+
+### 4. Adjoint or reverse-mode methods would become more compelling
+
+When the parameter count is large, methods that produce many parameter
+gradients more efficiently per solve become much more attractive.
+
+So the repo’s algorithm choices should be read correctly:
+
+- they are strong for a small two-parameter study,
+- they are not a claim that the same stack is automatically ideal for a large
+  inverse-design problem.
+
+## Why there is no full adjoint derivation here
+
+An adjoint derivation would be the natural next theoretical step for a
+large-parameter PDE inverse problem.
+
+Very roughly, the adjoint idea is:
+
+1. solve the forward problem,
+2. define a reverse sensitivity problem tied to the loss,
+3. propagate sensitivity backward through the dynamics,
+4. recover gradients for many parameters efficiently.
+
+Why does the repo not do that?
+
+- it would add a large second mathematical system,
+- it would add substantial implementation complexity,
+- it would be harder for beginners to audit,
+- and it is not necessary for a two-parameter demonstration.
+
+So the omission is intentional, not accidental.
+
+This chapter mentions adjoints so readers understand the tradeoff boundary:
+
+- for small parameter count, forward-mode AD is a sensible fit;
+- for large parameter count, adjoint-style thinking becomes much more relevant.
 
 ## Why the repo clamps values and bounds parameters
 
