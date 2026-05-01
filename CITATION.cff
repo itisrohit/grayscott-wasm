@@ -8,10 +8,10 @@ authors:
     given-names: "Rohit Kumar"
     email: "dv6510@gmail.com"
 repository-code: "https://github.com/itisrohit/grayscott-wasm"
-url: "https://github.com/itisrohit/grayscott-wasm"
+url: "https://itisrohit.github.io/grayscott-wasm/"
 license: "MIT"
-version: "0.1.0"
-date-released: "2026-04-30"
+version: "paper-draft-v4"
+date-released: "2026-05-01"
 preferred-citation:
   type: article
   authors:
@@ -20,4 +20,4 @@ preferred-citation:
   title: "Differentiable Gray-Scott Reaction-Diffusion in WebAssembly"
   journal: "Unpublished manuscript"
   year: 2026
-  url: "https://github.com/itisrohit/grayscott-wasm"
+  url: "https://github.com/itisrohit/grayscott-wasm/tree/paper-draft-v4"
